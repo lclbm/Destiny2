@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅
+from data.checklist import PenguinSouvenirs, egg, 增幅,bones
 from daily.report import getdailyreport
 from data.tie import gethardlink
 
@@ -952,15 +952,16 @@ def Check_bones(info):
     msg = ''
     notget = 0
     info = info['profileRecords']['data']['records']
-
-
-
-
+    for i in bones:
+        if info[i]['state'] == 6:
+            notget+=1
+            msg+=bones[i]['name']
+            msg+='📍'+bones[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
-        head = '🎉你已经收集了全部8个地区的阿罕卡拉遗骨🦴啦。！\n'
+        head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦！\n'
     else:
-        head = f'🎐你还差{notget}个地区的增幅✈没收集哦，快看看周报决定去哪获得增幅吧~\n'
+        head = f'🎐你还差{notget}个阿罕卡拉遗骨🦴没收集哦，下面给出了它们的位置，可以配合b站的骨头视频对着找噢\n'
     head += msg
     return head
 
