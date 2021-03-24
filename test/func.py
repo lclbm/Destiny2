@@ -429,7 +429,7 @@ async def GetRaidReport(membershipid):
         msg = f'''完成：{clears_value}次  Speed：{time}\n'''
         return msg
     except Exception as e:
-        raise FailToGet(membershipid, '获取队伍信息失败')
+        raise FailToGet(membershipid, f'获取队伍信息失败{e}')
 
 
 @ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
