@@ -687,7 +687,7 @@ async def KillWeaponData(session):
         else:
             await session.finish('请输入需要查询的职业\n职业可选：术士/猎人/泰坦\n指令样例：击杀数据 何志武223 术士', at_sender=True)
     except Exception as e:
-        await session.send(f'{e}', at_sender=True)
+        await session.send(f'{e}')
 
 
 def Check_Penguin(info):
@@ -960,26 +960,26 @@ def Check_bones(info):
             msg+='📍'+bones[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
-        head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦！\n'
+        head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，行遍幽梦之城的破咒者就是你吧。\n'
     else:
-        head = f'🎐你还差{notget}个阿罕卡拉遗骨🦴没收集哦！\n'
+        head = f'🎐你还差{notget}个遗骨🦴没收集哦，快去看看这周上维挑战在哪吧\n'
     head += msg
     return head
 
 
-@ on_command('骨头', aliases=('🦴'), only_to_me=False)
-async def Check_bones_aync(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        info = await GetInfo(args)
-        args = info['profile']['data']['userInfo']['displayName']
-        res = Check_bones(info)
-        head = f'{args}\n' + res + '#回复d2以查看其他功能'
-        print(head)
-        await session.send(head, at_sender=True)
-    except Exception as e:
-        await session.send(f'获取失败，{e}', at_sender=True)
+# @ on_command('骨头', aliases=('🦴'), only_to_me=False)
+# async def Check_bones_aync(session):
+#     try:
+#         hardlink = gethardlink(session)
+#         if hardlink:
+#             args = hardlink
+#         else:
+#             args = session.current_arg
+#         info = await GetInfo(args)
+#         args = info['profile']['data']['userInfo']['displayName']
+#         res = Check_bones(info)
+#         head = f'{args}\n' + res + '#回复d2以查看其他功能'
+#         print(head)
+#         await session.send(head, at_sender=True)
+#     except Exception as e:
+#         await session.send(f'获取失败，{e}', at_sender=True)
