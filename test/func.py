@@ -948,3 +948,35 @@ async def Dungeon(session):
         await session.send(f'获取失败，{e}', at_sender=True)
 
 
+def Check_bones(info):
+    msg = ''
+    notget = 0
+    info = info['profileRecords']['data']['records']
+
+
+
+
+    msg += '#回复d2以查看其他功能'
+    if notget == 0:
+        head = '🎉你已经收集了全部8个地区的阿罕卡拉遗骨🦴啦。！\n'
+    else:
+        head = f'🎐你还差{notget}个地区的增幅✈没收集哦，快看看周报决定去哪获得增幅吧~\n'
+    head += msg
+    return head
+
+
+@ on_command('骨头', aliases=('🦴'), only_to_me=False)
+async def Check_bones_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_bones(info)
+        head = f'{args}\n' + res + '#回复d2以查看其他功能'
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
