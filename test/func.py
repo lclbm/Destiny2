@@ -429,7 +429,7 @@ async def GetRaidReport(membershipid):
         msg = f'''完成：{clears_value}次  Speed：{time}\n'''
         return msg
     except Exception as e:
-        raise FailToGet(membershipid, f'获取队伍信息失败{e}')
+        raise FailToGet(membershipid, '获取队伍信息失败')
 
 
 @ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
@@ -583,8 +583,43 @@ def get_icon_kills(num):
         return '⚪'
 
 
-
-weponlist = {'Shotgun': '霰弹',
+@ on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
+async def KillWeaponData(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        if '泰坦' in args or '猎人' in args or '术士' in args:
+            if len(args.split(' ')) == 1:
+                await session.finish('请按照正确的格式输入指令\n指令样例：击杀 何志武223 术士', at_sender=True)
+            if len(args.split(' ')) > 2:
+                await session.finish('查询的玩家用户名中有空格，请使用队伍码查询', at_sender=True)
+            id = args.split(' ')[0]
+            classtype = args.split()[1]
+            if classtype != '泰坦' and classtype != '猎人' and classtype != '术士':
+                await session.finish(f' {id} ，查询的玩家用户名中有空格，请使用队伍码查询', at_sender=True)
+            info = await GetInfo(id)
+            args = info['profile']['data']['userInfo']['displayName']
+            membershipid = info['membershipid']
+            membershiptype = info['membershiptype_char']
+            classdict = {'泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
+            classhash = classdict[classtype]
+            characterid = ''
+            for i in info['characters']['data']:
+                if classhash == info['characters']['data'][i]['classHash']:
+                    characterid = info['characters']['data'][i]['characterId']
+                    break
+            #args = info['profile']['data']['userInfo']['displayName']
+            url = f'https://api.tracker.gg/api/v2/destiny-2/standard/profile/{membershiptype}/{membershipid}/segments/detailedStat?characterId={characterid}&modeType=AllPvP'
+            async with aiohttp.request("GET", url) as r:
+                # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
+                response = await r.text(encoding="utf-8")
+            info1 = json.loads(response)
+            info1 = info1['data']
+            msg = args + '\n'
+            weponlist = {'Shotgun': '霰弹',
                          'Melee': '近战',
                          'HandCannon': '手炮',
                          'Super': '超能',
@@ -605,40 +640,6 @@ weponlist = {'Shotgun': '霰弹',
                          'ScoutRifle': '斥候',
                          'Ability': '技能',
                          'BeamRifle': '追踪'}
-
-
-classdict = {'泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
-
-@ on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
-async def KillWeaponData(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        res = re.match(r'(.+) (术士|猎人|泰坦)',args)
-        if res:
-            id = res.group(1)
-            classtype = res.group(2)
-            info = await GetInfo(id)
-            args = info['profile']['data']['userInfo']['displayName']
-            membershipid = info['membershipid']
-            membershiptype = info['membershiptype_char']
-            classhash = classdict[classtype]
-            characterid = ''
-            for i in info['characters']['data']:
-                if classhash == info['characters']['data'][i]['classHash']:
-                    characterid = info['characters']['data'][i]['characterId']
-                    break
-            #args = info['profile']['data']['userInfo']['displayName']
-            url = f'https://api.tracker.gg/api/v2/destiny-2/standard/profile/{membershiptype}/{membershipid}/segments/detailedStat?characterId={characterid}&modeType=AllPvP'
-            async with aiohttp.request("GET", url) as r:
-                # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
-                response = await r.text(encoding="utf-8")
-            info1 = json.loads(response)
-            info1 = info1['data']
-            msg = args + '\n'
             stata = {}
             for i in info1:
                 if 'weapon' in i['attributes'].keys():
@@ -683,10 +684,9 @@ async def KillWeaponData(session):
             msg += f'🧨回复 d2 以查看其他功能{AppendInfo}'
             await session.finish(msg, at_sender=True)
         else:
-            session.finish('格式输入有误\n未绑定：击杀 何志武223 术士\n绑定后：击杀 术士')
+            await session.finish('请输入需要查询的职业\n职业可选：术士/猎人/泰坦\n指令样例：击杀数据 何志武223 术士', at_sender=True)
     except Exception as e:
         await session.send(f'{e}', at_sender=True)
-            
 
 
 def Check_Penguin(info):
@@ -961,7 +961,7 @@ def Check_bones(info):
     if notget == 0:
         head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦！\n'
     else:
-        head = f'🎐你还差{notget}个阿罕卡拉遗骨🦴没收集哦，下面给出了它们的位置，可以配合b站的骨头视频对着找噢\n'
+        head = f'🎐你还差{notget}个阿罕卡拉遗骨🦴没收集哦！\n'
     head += msg
     return head
 
@@ -978,6 +978,7 @@ async def Check_bones_aync(session):
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_bones(info)
         head = f'{args}\n' + res + '#回复d2以查看其他功能'
+        print(head)
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
