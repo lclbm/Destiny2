@@ -4,6 +4,17 @@ import re
 root = os.getcwd()
 root = os.path.join(root, 'res', 'destiny2', 'reply')
 
+class Untie(Exception):
+    '''当没有绑定时，抛出此异常'''
+    # 自定义异常类型的初始化
+
+    # def __init__(self, value, msg):
+    # 返回异常类对象的说明信息
+
+    def __str__(self):
+        return f"你似乎没有绑定自己的队伍码，请输入 绑定 【队伍码】以绑定个人信息。"
+
+
 
 def read_json(file):
     dict_temp = {}
@@ -31,7 +42,8 @@ def gethardlink(session):
                 print(msg)
                 return msg
             else:
-                raise Exception('请输入玩家队伍码/用户名')
+                print('没找到')
+                raise Untie()
         else:
             temp = checkmsg.split()
             checkmsg = temp[0]

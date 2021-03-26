@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅,bones
+from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats
 from daily.report import getdailyreport
 from data.tie import gethardlink
 
@@ -344,8 +344,9 @@ async def GetPlayerProfile(session):
 '''
         msg += f'#回复d2以查看其他功能\n💎无暇🔘全程✅通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇无法查询'
         await session.send(msg, at_sender=True)
-    except Exception as e:
-        await session.send(f'{e}', at_sender=True)
+    except Exception as err:
+        await session.send(f'{err}', at_sender=True)
+    
 
 
 @ on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
@@ -952,23 +953,100 @@ async def Dungeon(session):
 def Check_bones(info):
     msg = ''
     notget = 0
-    info = info['profileRecords']['data']['records']
+    info = info['profileProgression']['data']['checklists']['1297424116']
     for i in bones:
-        if info[i]['state'] == 6:
+        if info[i] == False:
             notget+=1
             msg+=bones[i]['name']
             msg+='📍'+bones[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
-        head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，行遍幽梦之城的破咒者就是你吧。\n'
+        head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，你就是行遍幽梦之城的破咒者\n'
     else:
-        head = f'🎐你还差{notget}个遗骨🦴没收集哦，快去看看这周上维挑战在哪吧\n'
+        head = f'🎐你还差{notget}个遗骨🦴没收集哦，顺便去看看这周上维挑战在哪嗷\n'
     head += msg
     return head
 
 
-# @ on_command('骨头', aliases=('🦴'), only_to_me=False)
-# async def Check_bones_aync(session):
+@ on_command('骨头', aliases=('🦴'), only_to_me=False)
+async def Check_bones_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_bones(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+def Check_cats(info):
+    msg = ''
+    notget = 0
+    info = info['profileProgression']['data']['checklists']['2726513366']
+    for i in cats:
+        if info[i] == False:
+            notget+=1
+            msg+=cats[i]['name']
+            msg+='📍'+cats[i]['location']+'\n'
+    msg += '#回复d2以查看其他功能'
+    if notget == 0:
+        head = '🎉你已经收集了全部9只小猫🐱啦，九柱神向你表示感谢\n'
+    else:
+        head = f'🎐你还差{notget}只小猫🐱没收集哦，下面是它们的位置：\n'
+    head += msg
+    print(head)
+    return head
+
+
+@ on_command('猫', aliases=('🐱'), only_to_me=False)
+async def Check_cats_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_cats(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+
+
+
+# def Check_chenghao(info):
+#     msg = ''
+#     notget = 0
+#     info = info['profileProgression']['data']['checklists']['1297424116']
+#     for i in bones:
+#         if info[i] == False:
+#             notget+=1
+#             msg+=bones[i]['name']
+#             msg+='📍'+bones[i]['location']+'\n'
+#     msg += '#回复d2以查看其他功能'
+#     if notget == 0:
+#         head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，你就是行遍幽梦之城的破咒者\n'
+#     else:
+#         head = f'🎐你还差{notget}个遗骨🦴没收集哦，顺便去看看这周上维挑战在哪嗷\n'
+#     head += msg
+#     return head
+
+
+
+
+
+# @ on_command('称号', only_to_me=False)
+# async def Check_bchenghao_aync(session):
 #     try:
 #         hardlink = gethardlink(session)
 #         if hardlink:
@@ -977,9 +1055,11 @@ def Check_bones(info):
 #             args = session.current_arg
 #         info = await GetInfo(args)
 #         args = info['profile']['data']['userInfo']['displayName']
-#         res = Check_bones(info)
-#         head = f'{args}\n' + res + '#回复d2以查看其他功能'
-#         print(head)
+#         res = Check_chenghao(info)
+#         head = f'{args}\n' + res
 #         await session.send(head, at_sender=True)
 #     except Exception as e:
 #         await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
