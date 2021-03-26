@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats,称号
+from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats,称号,Exo,暗熵碎片
 from daily.report import getdailyreport
 from data.tie import gethardlink
 
@@ -1073,9 +1073,10 @@ def Check_chenghao(info):
         progress = objectives['progress']
         completionValue = objectives['completionValue']
         icon = '🎯' if completionValue <= progress else '⚪'
-        name = 称号[i]
+        icon = '🏆' if 'gold' in 称号[i] and progress == 称号[i]['gold'] else icon
+        name = 称号[i]['name']
         msg+=f'{icon}{name}：{progress}/{completionValue}\n'
-    msg += '#回复d2以查看其他功能\n❗当前仅为测试，更多称号/镀金查询请等待后续更新'
+    msg += '🎉回复d2以查看其他功能'
     head = '【称号查询】\n'
     head += msg
     print(head)
@@ -1093,6 +1094,76 @@ async def Check_chenghao_aync(session):
         info = await GetInfo(args)
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_chenghao(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+def Check_exo(info):
+    msg = ''
+    notget = 0
+    info = info['profileProgression']['data']['checklists']['2568476210']
+    for i in Exo:
+        if info[i] == False:
+            notget+=1
+            msg+=Exo[i]['name']
+            msg+='📍'+Exo[i]['location']+'\n'
+    msg += '#回复d2以查看其他功能'
+    if notget == 0:
+        head = '🎉你已经收集了全部9只🐾死去的Exo啦\n'
+    else:
+        head = f'🎐你还差{notget}只🐾死去的Exo没收集哦，下面是它们的位置：\n'
+    head += msg
+    return head
+
+
+@ on_command('exo', aliases=('Exo','EXO'), only_to_me=False)
+async def Check_exo_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_exo(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+def Check_suipian(info):
+    msg = ''
+    notget = 0
+    info = info['profileProgression']['data']['checklists']['1885088224']
+    for i in 暗熵碎片:
+        if info[i] == False:
+            notget+=1
+            msg+=暗熵碎片[i]['name']
+            msg+='📍'+暗熵碎片[i]['location']+'\n'
+    msg += '#回复d2以查看其他功能'
+    if notget == 0:
+        head = '🎉你已经收集了全部9个🔷暗熵碎片啦\n'
+    else:
+        head = f'🎐你还差{notget}个🔷暗熵碎片没收集哦，下面是它们的位置：\n'
+    head += msg
+    return head
+
+
+@ on_command('碎片', aliases=('暗熵碎片'), only_to_me=False)
+async def Check_suipian_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_suipian(info)
         head = f'{args}\n' + res
         await session.send(head, at_sender=True)
     except Exception as e:

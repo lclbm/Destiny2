@@ -12,9 +12,17 @@ class Untie(Exception):
     # 返回异常类对象的说明信息
 
     def __str__(self):
-        return f"你似乎没有绑定自己的队伍码，请输入 绑定 【队伍码】以绑定个人信息。"
+        return f"你似乎想通过快捷方式查询自己的数据，但你并没有绑定自己的队伍码。\n请输入 绑定 【队伍码】以绑定个人队伍码"
 
+class Untie_friend(Exception):
+    '''当没有绑定时，抛出此异常'''
+    # 自定义异常类型的初始化
 
+    # def __init__(self, value, msg):
+    # 返回异常类对象的说明信息
+
+    def __str__(self):
+        return f"你似乎想通过快捷方式查询朋友的数据，但你并没有绑定该朋友的队伍码。\n请输入绑定 【昵称】【队伍码】以绑定你朋友的队伍码"
 
 def read_json(file):
     dict_temp = {}
@@ -39,7 +47,6 @@ def gethardlink(session):
                     msg = dict_temp['_self_']['msg'] + ' ' + checkmsg
                 else:
                     msg = dict_temp['_self_']['msg']
-                print(msg)
                 return msg
             else:
                 print('没找到')
@@ -50,13 +57,14 @@ def gethardlink(session):
             if checkmsg in dict_temp and dict_temp[checkmsg]['type'] == '绑定':
                 if len(temp) == 2:
                     msg = dict_temp[checkmsg]['msg'] + ' '+temp[1]
-                    print(msg)
                     return msg
                 else:
                     msg = dict_temp[checkmsg]['msg']
-                    print(msg)
                     return msg
             else:
                 return None
     else:
-        return None
+        if checkmsg:
+            return None
+        else:
+            raise Untie()
