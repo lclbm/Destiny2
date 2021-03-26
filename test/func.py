@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats
+from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats,称号
 from daily.report import getdailyreport
 from data.tie import gethardlink
 
@@ -63,11 +63,11 @@ sv = hoshino.Service('命运2', help_=HELP_MSG)
 
 # ⚪生涯查询 [队伍码/用户名]
 # 查询玩家生涯数据
-@sv.on_fullmatch(('功能', 'd2', 'D2', '喵内嘎', '喵内', '日向', '小日向', '喵内噶'))
-async def D2Help(bot, ev):
-    global count
-    count += 1
-    await bot.send(ev, HELP_MSG)
+# @sv.on_fullmatch(('功能', 'd2', 'D2', '喵内嘎', '喵内', '日向', '小日向', '喵内噶'))
+# async def D2Help(bot, ev):
+#     global count
+#     count += 1
+#     await bot.send(ev, HELP_MSG)
 
 
 @sv.on_fullmatch('日报')
@@ -990,6 +990,9 @@ def Check_cats(info):
     info = info['profileProgression']['data']['checklists']['2726513366']
     for i in cats:
         if info[i] == False:
+
+
+            
             notget+=1
             msg+=cats[i]['name']
             msg+='📍'+cats[i]['location']+'\n'
@@ -999,7 +1002,6 @@ def Check_cats(info):
     else:
         head = f'🎐你还差{notget}只小猫🐱没收集哦，下面是它们的位置：\n'
     head += msg
-    print(head)
     return head
 
 
@@ -1063,3 +1065,35 @@ async def Check_cats_aync(session):
 
 
 
+def Check_chenghao(info):
+    msg = ''
+    info = info['profileRecords']['data']['records']
+    for i in 称号:
+        objectives = info[i]['objectives'][0]
+        progress = objectives['progress']
+        completionValue = objectives['completionValue']
+        icon = '🎯' if completionValue <= progress else '⚪'
+        name = 称号[i]
+        msg+=f'{icon}{name}：{progress}/{completionValue}\n'
+    msg += '#回复d2以查看其他功能\n❗当前仅为测试，更多称号/镀金查询请等待后续更新'
+    head = '【称号查询】\n'
+    head += msg
+    print(head)
+    return head
+
+
+@ on_command('称号', only_to_me=False)
+async def Check_chenghao_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_chenghao(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
