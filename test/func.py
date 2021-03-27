@@ -285,10 +285,8 @@ async def GetPlayerProfile(session):
             speed_rank = raid['speedRank']['tier']
         time = get_time_text(speed_value)
         msg = f'''{args}
-🎉【Full Clears Rank】
-突袭完成：{clears_value}次 等级：{clears_rank}
-🚀【Speed Rank】
-完成时间：{time} 等级：{speed_rank}\n'''
+🎉【完成】{clears_value}次 📍{clears_rank}
+✨【时间】{time} 🚀{speed_rank}\n'''
 # 针对小日向做了较大的更新，输入 d2 返回菜单以查看更新
 # 如果数据异常请尝试用队伍码查询'''
         raiddict = {}
@@ -340,9 +338,9 @@ async def GetPlayerProfile(session):
                 head = f'📕【{raidname}】'
             msg += \
                 f'''{head}
-🔘{full_clears:^3}/✅{clears:^3}🎓{sherpaCount:^3}次 🚀{time}
+🔘{full_clears:^3}/✅{clears:^3}🎓{sherpaCount:^3} 🚀{time}
 '''
-        msg += f'#回复d2以查看其他功能\n💎无暇🔘全程✅通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇无法查询'
+        msg += f'#回复d2以查看其他功能\n💎无暇🔘全程✅通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
         await session.send(msg, at_sender=True)
     except Exception as err:
         await session.send(f'{err}', at_sender=True)
@@ -357,25 +355,35 @@ async def GetPlayerpvp(session):
             args = hardlink
         else:
             args = session.current_arg
-        raid = await GetInfo(args)
-        args = raid['profile']['data']['userInfo']['displayName']
-        raid = raid['metrics']['data']['metrics']
-        kill = raid['811894228']['objectiveProgress']['progress']
-        reset = raid['3626149776']['objectiveProgress']['progress']
-        kda = int(raid['871184140']['objectiveProgress']['progress']) / 100
-        valor_now = raid['2872213304']['objectiveProgress']['progress']
-        kill_this_season = raid['2935221077']['objectiveProgress']['progress']
-        Glory = raid['268448617']['objectiveProgress']['progress']
+        info = await GetInfo(args)
+        record = info['profileRecords']['data']['records']
+        args = info['profile']['data']['userInfo']['displayName']
+        metrics = info['metrics']['data']['metrics']
+        kill = metrics['811894228']['objectiveProgress']['progress']
+        reset = metrics['3626149776']['objectiveProgress']['progress']
+        kda = int(metrics['871184140']['objectiveProgress']['progress']) / 100
+        valor_now = metrics['2872213304']['objectiveProgress']['progress']
+        kill_this_season = metrics['2935221077']['objectiveProgress']['progress']
+        Glory = metrics['268448617']['objectiveProgress']['progress'] 
+        第七砥柱 = record['1110690562']['objectives'][0]['progress']
+        万夫莫敌 = record['1582949833']['objectives'][0]['progress']
+        黑夜鬼魂 = record['3354992513']['objectives'][0]['progress']
+        为你而做 = record['380324143']['objectives'][0]['progress']
         msg = f'''{args}
-⚪【职业生涯】
-击败对手：{kill}人
-英勇等级重置：{reset}次
-⚪【当前赛季】
-KDA：{kda}
-生存分：{Glory}
-赛季击杀：{kill_this_season}
-英勇总分：{valor_now}{AppendInfo}
-# 回复d2以查看其他功能'''
+🤞【职业生涯】
+     🎯击败对手：{kill}人
+     🎉英勇重置：{reset}次\n'''
+        msg += f'     🙏为你而做🙏：{为你而做}次\n' if 为你而做 != 0 else ''
+        msg += f'     💎第七砥柱💎：{第七砥柱}次\n' if 第七砥柱 != 0 else ''
+        msg += f'     💎万夫莫敌💎：{万夫莫敌}次\n' if 万夫莫敌 != 0 else ''
+        msg += f'     💎黑夜鬼魂💎：{黑夜鬼魂}次\n' if 黑夜鬼魂 != 0 else ''
+        msg+=f'''🤞【当前赛季】
+     🎐KDA：{kda}
+     🧨生存分：{Glory}
+     ✨赛季击杀：{kill_this_season}
+     ⚔英勇总分：{valor_now}{AppendInfo}
+#回复d2以查看其他功能'''
+        print(msg)
         await session.send(msg, at_sender=True)
     except Exception as e:
         await session.send(f'{e}')
