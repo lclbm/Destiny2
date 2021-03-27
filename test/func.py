@@ -819,7 +819,6 @@ def Check_zengfu(info):
     for key in info:
         if key['complete'] != True:
             notget += 1
-            print(key)
             msg += 增幅[str(key['objectiveHash'])]['name']+'📍' + \
                 增幅[str(key['objectiveHash'])]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
@@ -843,7 +842,6 @@ async def Check_zengfu_aync(session):
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zengfu(info)
         head = f'{args}\n' + res + '#回复d2以查看其他功能'
-        print(head)
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
@@ -877,7 +875,6 @@ async def Dungeon(session):
             # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
             response = await r.text(encoding="utf-8")
         dungeon = json.loads(response)
-        print(dungeon)
         dungeon = dungeon['response']
         clears = dungeon['clearsRank']
         clears_count = clears['value']
@@ -892,9 +889,6 @@ async def Dungeon(session):
 🎉【完成】{clears_count}次 📍{clear_rank}
 ✨【时间】{speed_count} 🚀{speed_rank}
 '''
-        temp = '''
-🚀【时间】✔🚀🎈🎯✨💎{clears_count}次 📍啊🌠{clears_rank}
-'''
         record = {}
         for i in activities:
             hashid = i['activityHash']
@@ -902,7 +896,6 @@ async def Dungeon(session):
             if not dungeonname:
                 continue
             entity = i['values']
-            print(entity)
             if dungeonname in record:
                 record[dungeonname]['clears'] += entity['clears']
                 record[dungeonname]['fullClears'] += entity['fullClears']
@@ -911,8 +904,10 @@ async def Dungeon(session):
                     record[dungeonname]['fastestFullClear'] = entity['fastestFullClear']['value'] if entity['fastestFullClear'][
                         'value'] < record[dungeonname]['fastestFullClear'] else record[dungeonname]['fastestFullClear']
                 if 'flawlessDetails' in entity:
-                    record[dungeonname]['flawlessDetails'] = entity['flawlessDetails']['accountCount'] if entity['flawlessDetails'][
-                        'accountCount'] < record[dungeonname]['flawlessDetails'] or record[dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
+                    least = 3
+                    for j in entity['flawlessActivities']:
+                        least = [least, j['accountCount']][j['accountCount'] < least]
+                    record[dungeonname]['flawlessDetails'] = least if least < record[dungeonname]['flawlessDetails'] or record[dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
                 if 'bestPlayerCountDetails' in entity:
                     record[dungeonname]['bestPlayerCountDetails'] = entity['bestPlayerCountDetails']['accountCount'] if entity['bestPlayerCountDetails'][
                         'accountCount'] < record[dungeonname]['bestPlayerCountDetails'] or record[dungeonname]['bestPlayerCountDetails'] == 0 else record[dungeonname]['bestPlayerCountDetails']
@@ -932,7 +927,6 @@ async def Dungeon(session):
         dungeon_order = sorted(
             record.items(), key=lambda x: x[1]['clears'], reverse=True)
         for i in dungeon_order:
-            print(i)
             dungeonname = i[0]
             singledict = i[1]
             clears = singledict['clears']
@@ -943,8 +937,7 @@ async def Dungeon(session):
             icon2 = '🎉' if singledict['bestPlayerCountDetails'] == 1 else '⚪'
             head += f'''{icon1}{icon2}『{dungeonname}』
         🎯{fullClears:<3}/✅{clears:<3} 🎓{sherpaCount:<2} 🚀{fastestFullClear}\n'''
-        head += '💎单人无暇 🎉单人\n#回复d2以查看其他功能\n❗数据暂时有些小问题，请等待修复\n❗数据暂时有些小问题，请等待修复'
-        print(head)
+        head += '💎单人无暇 🎉单人\n🚀回复d2以查看其他功能'
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
@@ -1079,7 +1072,6 @@ def Check_chenghao(info):
     msg += '🎉回复d2以查看其他功能'
     head = '【称号查询】\n'
     head += msg
-    print(head)
     return head
 
 
