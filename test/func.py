@@ -13,9 +13,9 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅,bones,cats,称号,Exo,暗熵碎片
-from daily.report import getdailyreport
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战
 from data.tie import gethardlink
+from daily.report import getdailyreport
 
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
@@ -84,9 +84,6 @@ async def daily(bot, ev, only_to_me=False):
     except Exception as e:
         print(e)
         await bot.send(ev, 'Bungie正在进行维护，服务器连接失败，日报更新可能需要延后')
-
-
-
 
 
 @sv.on_fullmatch(('收费'))
@@ -218,7 +215,7 @@ async def GetInfo(args) -> dict:
     result = await GetMembershipidAndMembershiptype(args)
     membershipid = result['membershipid']
     membershiptype = result['membershiptype_num']
-    response = await destiny.api.get_profile(membershiptype, membershipid, [200, 100, 104, 900, 1100, 1000])
+    response = await destiny.api.get_profile(membershiptype, membershipid, [200, 100, 104, 700,800, 900, 1100, 1000])
     get_success(response, args)
     if len(response['Response']['metrics']) == 1:
         raise Error_Privacy(args)
@@ -337,14 +334,13 @@ async def GetPlayerProfile(session):
             else:
                 head = f'📕【{raidname}】'
             msg += \
-                f'''{head}
-🔘{full_clears:^3}/✅{clears:^3}🎓{sherpaCount:^3} 🚀{time}
+                f'''{head}🚀{time}
+      🔘{full_clears:^3}/✅{clears:^3}🎓{sherpaCount:^3}
 '''
         msg += f'#回复d2以查看其他功能\n💎无暇🔘全程✅通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
         await session.send(msg, at_sender=True)
     except Exception as err:
         await session.send(f'{err}', at_sender=True)
-    
 
 
 @ on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
@@ -364,7 +360,7 @@ async def GetPlayerpvp(session):
         kda = int(metrics['871184140']['objectiveProgress']['progress']) / 100
         valor_now = metrics['2872213304']['objectiveProgress']['progress']
         kill_this_season = metrics['2935221077']['objectiveProgress']['progress']
-        Glory = metrics['268448617']['objectiveProgress']['progress'] 
+        Glory = metrics['268448617']['objectiveProgress']['progress']
         第七砥柱 = record['1110690562']['objectives'][0]['progress']
         万夫莫敌 = record['1582949833']['objectives'][0]['progress']
         黑夜鬼魂 = record['3354992513']['objectives'][0]['progress']
@@ -377,7 +373,7 @@ async def GetPlayerpvp(session):
         msg += f'     💎第七砥柱💎：{第七砥柱}次\n' if 第七砥柱 != 0 else ''
         msg += f'     💎万夫莫敌💎：{万夫莫敌}次\n' if 万夫莫敌 != 0 else ''
         msg += f'     💎黑夜鬼魂💎：{黑夜鬼魂}次\n' if 黑夜鬼魂 != 0 else ''
-        msg+=f'''🤞【当前赛季】
+        msg += f'''🤞【当前赛季】
      🎐KDA：{kda}
      🧨生存分：{Glory}
      ✨赛季击杀：{kill_this_season}
@@ -534,17 +530,13 @@ async def Elo(session):
             kd = float(i['stats']['kd']['displayValue'])
             if kd > 10:
                 kd = round(kd, 1)
-            msg += f'🎉{mode}📕 Elo:{elo:<4}\n📏Kd:{kd:^5} {rank:\u3000<11}\n'
+            msg += f'🎉{mode}📕 Elo:{elo:<4}\n      📏Kd:{kd:^5} {rank:\u3000<11}\n'
         msg += f'#回复d2以查看其他功能{AppendInfo}'
         await session.send(msg, at_sender=True)
     except TypeError:
         await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
     except FailToGet as e:
         await session.send(f'{e}', at_sender=True)
-
-
-
-
 
 
 @ on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
@@ -566,9 +558,9 @@ async def getDataFireteam(session):
             name = i['displayName']
             membershipid = i['membershipId']
             if i['status'] == 11:
-                msg += f'🦄 『{name}』\n'
+                msg += f'🦄『{name}』\n'
             else:
-                msg += f'🐴 『{name}』\n'
+                msg += f'🐴『{name}』\n'
             msg += await GetRaidReport(membershipid)
         msg += f'#回复d2以查看其他功能{AppendInfo}'
         await session.send(msg, at_sender=True)
@@ -914,8 +906,10 @@ async def Dungeon(session):
                 if 'flawlessDetails' in entity:
                     least = 3
                     for j in entity['flawlessActivities']:
-                        least = [least, j['accountCount']][j['accountCount'] < least]
-                    record[dungeonname]['flawlessDetails'] = least if least < record[dungeonname]['flawlessDetails'] or record[dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
+                        least = [least, j['accountCount']
+                                 ][j['accountCount'] < least]
+                    record[dungeonname]['flawlessDetails'] = least if least < record[dungeonname]['flawlessDetails'] or record[
+                        dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
                 if 'bestPlayerCountDetails' in entity:
                     record[dungeonname]['bestPlayerCountDetails'] = entity['bestPlayerCountDetails']['accountCount'] if entity['bestPlayerCountDetails'][
                         'accountCount'] < record[dungeonname]['bestPlayerCountDetails'] or record[dungeonname]['bestPlayerCountDetails'] == 0 else record[dungeonname]['bestPlayerCountDetails']
@@ -924,13 +918,20 @@ async def Dungeon(session):
                 fullClears = entity['fullClears']
                 sherpaCount = entity['sherpaCount']
                 fastestFullClear = entity['fastestFullClear']['value'] if 'fastestFullClear' in entity else 0
-                flawlessDetails = entity['flawlessDetails']['accountCount'] if 'flawlessDetails' in entity else 0
+                if 'flawlessActivities' in entity:
+                    least = 3
+                    for j in entity['flawlessActivities']:
+                        least = [least, j['accountCount']
+                                 ][j['accountCount'] < least]
+                    flawlessDetails = least
+                else:
+                    flawlessDetails = 0
                 bestPlayerCountDetails = entity['bestPlayerCountDetails'][
                     'accountCount'] if 'bestPlayerCountDetails' in entity else 0
                 record[dungeonname] = {'clears': clears, 'fullClears': fullClears,
                                        'sherpaCount': sherpaCount, 'fastestFullClear': fastestFullClear,
                                        'flawlessDetails': flawlessDetails, 'bestPlayerCountDetails': bestPlayerCountDetails}
-                
+
         # 归类完成
         dungeon_order = sorted(
             record.items(), key=lambda x: x[1]['clears'], reverse=True)
@@ -941,10 +942,10 @@ async def Dungeon(session):
             fullClears = singledict['fullClears']
             sherpaCount = singledict['sherpaCount']
             fastestFullClear = get_time_text(singledict['fastestFullClear'])
-            icon1 = '💎'if singledict['flawlessDetails']==1 else '⚪'
+            icon1 = '💎'if singledict['flawlessDetails'] == 1 else '⚪'
             icon2 = '🎉' if singledict['bestPlayerCountDetails'] == 1 else '⚪'
-            head += f'''{icon1}{icon2}『{dungeonname}』
-        🎯{fullClears:<3}/✅{clears:<3} 🎓{sherpaCount:<2} 🚀{fastestFullClear}\n'''
+            head += f'''{icon1}{icon2}『{dungeonname}』🚀{fastestFullClear}
+        🎯{fullClears:<3}/✅{clears:<3} 🎓{sherpaCount:<2}\n'''
         head += '💎单人无暇 🎉单人\n🚀回复d2以查看其他功能'
         await session.send(head, at_sender=True)
     except Exception as e:
@@ -957,9 +958,9 @@ def Check_bones(info):
     info = info['profileProgression']['data']['checklists']['1297424116']
     for i in bones:
         if info[i] == False:
-            notget+=1
-            msg+=bones[i]['name']
-            msg+='📍'+bones[i]['location']+'\n'
+            notget += 1
+            msg += bones[i]['name']
+            msg += '📍'+bones[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，你就是行遍幽梦之城的破咒者\n'
@@ -985,6 +986,7 @@ async def Check_bones_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
+
 def Check_cats(info):
     msg = ''
     notget = 0
@@ -992,11 +994,9 @@ def Check_cats(info):
     for i in cats:
         if info[i] == False:
 
-
-            
-            notget+=1
-            msg+=cats[i]['name']
-            msg+='📍'+cats[i]['location']+'\n'
+            notget += 1
+            msg += cats[i]['name']
+            msg += '📍'+cats[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9只小猫🐱啦，九柱神向你表示感谢\n'
@@ -1023,10 +1023,6 @@ async def Check_cats_aync(session):
         await session.send(f'获取失败，{e}', at_sender=True)
 
 
-
-
-
-
 # def Check_chenghao(info):
 #     msg = ''
 #     notget = 0
@@ -1043,9 +1039,6 @@ async def Check_cats_aync(session):
 #         head = f'🎐你还差{notget}个遗骨🦴没收集哦，顺便去看看这周上维挑战在哪嗷\n'
 #     head += msg
 #     return head
-
-
-
 
 
 # @ on_command('称号', only_to_me=False)
@@ -1065,7 +1058,6 @@ async def Check_cats_aync(session):
 #         await session.send(f'获取失败，{e}', at_sender=True)
 
 
-
 def Check_chenghao(info):
     msg = ''
     info = info['profileRecords']['data']['records']
@@ -1076,7 +1068,7 @@ def Check_chenghao(info):
         icon = '🎯' if completionValue <= progress else '⚪'
         icon = '🏆' if 'gold' in 称号[i] and progress == 称号[i]['gold'] else icon
         name = 称号[i]['name']
-        msg+=f'{icon}{name}：{progress}/{completionValue}\n'
+        msg += f'{icon}{name}：{progress}/{completionValue}\n'
     msg += '🎉回复d2以查看其他功能'
     head = '【称号查询】\n'
     head += msg
@@ -1106,9 +1098,9 @@ def Check_exo(info):
     info = info['profileProgression']['data']['checklists']['2568476210']
     for i in Exo:
         if info[i] == False:
-            notget+=1
-            msg+=Exo[i]['name']
-            msg+='📍'+Exo[i]['location']+'\n'
+            notget += 1
+            msg += Exo[i]['name']
+            msg += '📍'+Exo[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9只🐾死去的Exo啦\n'
@@ -1118,7 +1110,7 @@ def Check_exo(info):
     return head
 
 
-@ on_command('exo', aliases=('Exo','EXO'), only_to_me=False)
+@ on_command('exo', aliases=('Exo', 'EXO'), only_to_me=False)
 async def Check_exo_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1141,9 +1133,9 @@ def Check_suipian(info):
     info = info['profileProgression']['data']['checklists']['1885088224']
     for i in 暗熵碎片:
         if info[i] == False:
-            notget+=1
-            msg+=暗熵碎片[i]['name']
-            msg+='📍'+暗熵碎片[i]['location']+'\n'
+            notget += 1
+            msg += 暗熵碎片[i]['name']
+            msg += '📍'+暗熵碎片[i]['location']+'\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9个🔷暗熵碎片啦\n'
@@ -1168,3 +1160,103 @@ async def Check_suipian_aync(session):
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
+
+
+def Check_zhengzhang(info):
+    msg = ''
+    info = info['profilePresentationNodes']['data']['nodes']
+    for i in 证章:
+        objectives = info[i]
+        progressValue = objectives['progressValue']
+        completionValue = objectives['completionValue']
+        icon = '✅' if completionValue == progressValue else '⚪'
+        name = 证章[i]
+        msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【证章查询】\n'
+    head += msg
+    return head
+
+
+@ on_command('证章', only_to_me=False)
+async def Check_zhengzhang_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_zhengzhang(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+def Check_saijitiaozhan(info):
+    msg = ''
+    info = info['characterPresentationNodes']['data']
+    characterid = list(info.keys())[0]
+    info = info[characterid]['nodes']
+    for i in 赛季挑战:
+        objectives = info[i]
+        progressValue = objectives['progressValue']
+        completionValue = objectives['completionValue']
+        icon = '✅' if completionValue == progressValue and completionValue != 0  else '⚪'
+        name = 赛季挑战[i]
+        msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【赛季挑战】\n'
+    head += msg
+    return head
+
+
+@ on_command('赛季挑战', only_to_me=False)
+async def Check_saijitiaozhan_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_saijitiaozhan(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+
+
+
+
+# def Check_rabbit(info):
+#     明日之眼 = info['profileCollectibles']['data']['collectibles']['753200559']['state']
+
+
+
+
+
+
+
+
+# @ on_command('突袭周常', only_to_me=False)
+# async def Check_mingrizhiyan_aync(session):
+#     try:
+#         hardlink = gethardlink(session)
+#         if hardlink:
+#             args = hardlink
+#         else:
+#             args = session.current_arg
+#         info = await GetInfo(args)
+#         args = info['profile']['data']['userInfo']['displayName']
+#         res = Check_weeklyraid(info)
+#         head = f'{args}\n' + res
+#         await session.send(head, at_sender=True)
+#     except Exception as e:
+#         await session.send(f'获取失败，{e}', at_sender=True)
