@@ -137,7 +137,7 @@ def add_josn(msg, mode):
         # raw_message = ''
         # for i in temp:
         #     raw_message += i
-        res = re.match(r'添加.*【(.+)】.*【(.+)(】?)', raw_message)
+        res = re.match(r'个人添加.*【(.+)】.*【(.+)(】?)', raw_message)
         if not res:
             return 0
         print(res.groups())
@@ -167,6 +167,10 @@ def add_josn(msg, mode):
         dict_temp[question] = {'type': '自定义', 'msg': answer}
         write_json(dict_temp, file)
     return 1
+
+    if mode == 3:
+        pass
+
 
 
 def get_msg(msg):

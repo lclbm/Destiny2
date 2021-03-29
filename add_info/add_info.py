@@ -62,7 +62,7 @@ async def add_info_all(session):
 async def add_info_user(session):
     try:
         if not add_josn(session.ctx, 2):
-            await session.send('绑定失败，绑定帮助有新的更新了，绑定失败不妨来试试看哦，输入绑定帮助即可',at_sender=True)
+            await session.send('添加失败，输入绑定帮助以查看帮助',at_sender=True)
         else:
             await session.send('成功',at_sender=True)
     except Exception as e:

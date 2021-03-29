@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC
 from data.tie import gethardlink
 from daily.report import getdailyreport
 
@@ -215,7 +215,7 @@ async def GetInfo(args) -> dict:
     result = await GetMembershipidAndMembershiptype(args)
     membershipid = result['membershipid']
     membershiptype = result['membershiptype_num']
-    response = await destiny.api.get_profile(membershiptype, membershipid, [200, 100, 104, 700,800, 900, 1100, 1000])
+    response = await destiny.api.get_profile(membershiptype, membershipid, [200, 202,100, 104, 700,800, 900, 1100, 1000])
     get_success(response, args)
     if len(response['Response']['metrics']) == 1:
         raise Error_Privacy(args)
@@ -1145,7 +1145,7 @@ def Check_suipian(info):
     return head
 
 
-@ on_command('碎片', aliases=('暗熵碎片'), only_to_me=False)
+@ on_command('碎片', aliases=('暗熵碎片','碎片查询','🧩'), only_to_me=False)
 async def Check_suipian_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1229,7 +1229,93 @@ async def Check_saijitiaozhan_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
+def Check_qianzhao(info):
+    msg = ''
+    info = info['profileRecords']['data']['records']
+    for i in 前兆['碎片']:
+        objectives = info[i]['objectives'][0]
+        progressValue = objectives['progress']
+        completionValue = objectives['completionValue']
+        icon = '✅' if completionValue == progressValue else '⚪'
+        name = 前兆['碎片'][i]
+        msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
 
+    for i in 前兆['成就']:
+        objectives = info[i]['objectives'][11]
+        progressValue = objectives['progress']
+        completionValue = objectives['completionValue']
+        icon = '✅' if completionValue == progressValue else '⚪'
+        name = 前兆['成就'][i]
+        msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【前兆查询】\n'
+    head += msg
+    return head
+
+
+@ on_command('前兆', only_to_me=False)
+async def Check_qianzhao_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_qianzhao(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+classdict = {3655393761:'泰 ', 671679327:'猎 ' ,2271682572:'术 '}
+def Check_DSC(info):
+    msg = ''
+    characterProgressions = info['characterProgressions']['data']
+    characters = info['characters']['data']
+    职业 = ''
+    职业msg = ''
+    关卡=['','','','']
+    for i in characterProgressions:
+        characterName = classdict[characters[i]['classHash']]
+        milestones = characterProgressions[i]['milestones']
+        职业 += characterName
+        phases = milestones['541780856']['activities'][0]['phases']
+        for j in range(4):
+            complete = phases[j]['complete']
+            关卡[j]+='✅' if complete == True else '⚪'
+    职业 = 职业.split()
+    length = len(职业)
+    职业msg  += f'             {职业[0]}'
+    职业msg  += f' {职业[1]}' if length > 1 else ''
+    职业msg  += f' {职业[2]}' if length > 2 else ''
+    msg = 职业msg + '\n'
+    msg += f'''第一关：{}
+    
+    
+'''
+    msg += '🎉回复d2以查看其他功能'
+    head = '【深岩墓室查询】\n'
+    head += msg
+    return head
+
+
+@ on_command('地窖', aliases=('深岩墓室'),only_to_me=False)
+async def Check_DSC_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args)
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_DSC(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
 
 
 
