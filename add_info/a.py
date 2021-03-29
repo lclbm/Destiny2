@@ -108,7 +108,7 @@ def add_josn(msg, mode):
         raw_message = msg['raw_message']
         user_id = msg['user_id']
         print(raw_message)
-        res = re.match(r'绑定 +(【\S*】)? *【(7656\d{13})】.*', raw_message)
+        res = re.match(r'绑定 +(【.*】)? *【(7656\d{13})】.*', raw_message)
         if not res:
             return None
         name1 = res.group(1)
@@ -137,7 +137,7 @@ def add_josn(msg, mode):
         # raw_message = ''
         # for i in temp:
         #     raw_message += i
-        res = re.match(r'个人添加.*【(.+)】.*【(.+)(】?)', raw_message)
+        res = re.match(r'添加.*【(.+)】.*【(.+)(】?)', raw_message)
         if not res:
             return 0
         print(res.groups())

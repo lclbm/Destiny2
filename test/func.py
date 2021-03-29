@@ -1241,7 +1241,7 @@ def Check_qianzhao(info):
         msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
 
     for i in 前兆['成就']:
-        objectives = info[i]['objectives'][11]
+        objectives = info[i]['intervalObjectives'][11]
         progressValue = objectives['progress']
         completionValue = objectives['completionValue']
         icon = '✅' if completionValue == progressValue else '⚪'
@@ -1265,6 +1265,7 @@ async def Check_qianzhao_aync(session):
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_qianzhao(info)
         head = f'{args}\n' + res
+        print(head)
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
@@ -1274,6 +1275,7 @@ def Check_DSC(info):
     msg = ''
     characterProgressions = info['characterProgressions']['data']
     characters = info['characters']['data']
+    Record = info['profileRecords']['data']['records']
     职业 = ''
     职业msg = ''
     关卡=['','','','']
@@ -1281,25 +1283,35 @@ def Check_DSC(info):
         characterName = classdict[characters[i]['classHash']]
         milestones = characterProgressions[i]['milestones']
         职业 += characterName
-        phases = milestones['541780856']['activities'][0]['phases']
-        for j in range(4):
-            complete = phases[j]['complete']
-            关卡[j]+='✅' if complete == True else '⚪'
+        if '541780856' in milestones:
+            phases = milestones['541780856']['activities'][0]['phases']
+            for j in range(4):
+                complete = phases[j]['complete']
+                关卡[j]+='✅' if complete == True else '⚪'
+        else:
+            for j in range(4):
+                关卡[j]+='✅' 
+
     职业 = 职业.split()
     length = len(职业)
     职业msg  += f'             {职业[0]}'
     职业msg  += f' {职业[1]}' if length > 1 else ''
     职业msg  += f' {职业[2]}' if length > 2 else ''
     msg = 职业msg + '\n'
-    msg += f'''第一关：{}
-    
-    
+    msg += f'''第一关：{关卡[0]}
+第二关：{关卡[1]}
+第三关：{关卡[2]}
+第四关：{关卡[3]}
+【挑战查询】
 '''
-    msg += '🎉回复d2以查看其他功能'
+    for i in DSC['挑战']:
+        name = DSC['挑战'][i]
+        icon = '✅' if Record[i]['objectives'][0]['complete'] == True else '⚪'
+        msg+=f'{icon}{name}\n'
+    msg += '🎉回复d2以查看其他功能\n❗由于Bungie数据问题，只打尾王也算完成了全程'
     head = '【深岩墓室查询】\n'
     head += msg
     return head
-
 
 @ on_command('地窖', aliases=('深岩墓室'),only_to_me=False)
 async def Check_DSC_aync(session):
@@ -1313,6 +1325,7 @@ async def Check_DSC_aync(session):
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_DSC(info)
         head = f'{args}\n' + res
+        print(head)
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)

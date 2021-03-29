@@ -78,7 +78,8 @@ async def add_tie(session):
                 await session.send('绑定失败，小日向发现你没有添加【】符号，小日向给你提供了正确的绑定指令，复制粘贴试试哦', at_sender=True)
                 await session.send(f'绑定 【{id}】')
             else:
-                await session.send('绑定失败，绑定帮助有新的更新了，绑定失败不妨来试试看哦，输入绑定帮助即可',at_sender=True)
+                await session.send('绑定失败，小日向给你发一个绑定格式吧，修改一下再发给我哦\n（❗队伍码需要输入17位纯数字）', at_sender=True)
+                await session.send(f'绑定 【在这里输入你的队伍码】')
         else:
             await session.send('绑定成功',at_sender=True)
     except Exception as e:
