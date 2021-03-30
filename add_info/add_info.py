@@ -51,14 +51,14 @@ async def check(*params):
 @sv.on_command('AddAll')
 async def add_info_all(session):
     try:
-        if not add_josn(session.ctx, 0):
-            await session.send('你是不是管理员先就在这里AddAll',at_sender=True)
-        else:
-            await session.send('成功',at_sender=True)
+        # if not add_josn(session.ctx, 0):
+        #     await session.send('该命令需要小日向的管理权限',at_sender=True)
+        # else:
+            await session.send('AddAll ____test\r\nline1\r\nline2\r\n[CQ:image,file=0e3ab320fa121e0060d191fe98a154c5.image]\r\n再换一行\r\n[CQ:image,file = 0965355524cb9135f18e50a54c61db13.image]',at_sender=True)
     except Exception as e:
         await session.send(f'{e}')
 
-@sv.on_command('添加')
+@sv.on_command('添加个人')
 async def add_info_user(session):
     try:
         if not add_josn(session.ctx, 2):
@@ -67,6 +67,18 @@ async def add_info_user(session):
             await session.send('成功',at_sender=True)
     except Exception as e:
         await session.send(f'{e}')
+
+@sv.on_command('添加群组')
+async def add_info_group(session):
+    try:
+        if not add_josn(session.ctx, 3):
+            await session.send('添加失败，输入绑定帮助以查看帮助',at_sender=True)
+        else:
+            await session.send('成功',at_sender=True)
+    except Exception as e:
+        await session.send(f'{e}')
+
+
 
 @sv.on_command('绑定')
 async def add_tie(session):

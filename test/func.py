@@ -1270,7 +1270,7 @@ async def Check_qianzhao_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
-classdict = {3655393761:'泰 ', 671679327:'猎 ' ,2271682572:'术 '}
+classdict = {3655393761:'泰坦', 671679327:'猎人' ,2271682572:'术士'}
 def Check_DSC(info):
     msg = ''
     characterProgressions = info['characterProgressions']['data']
@@ -1282,28 +1282,18 @@ def Check_DSC(info):
     for i in characterProgressions:
         characterName = classdict[characters[i]['classHash']]
         milestones = characterProgressions[i]['milestones']
-        职业 += characterName
+        msg+=f'{characterName}：'
         if '541780856' in milestones:
             phases = milestones['541780856']['activities'][0]['phases']
             for j in range(4):
                 complete = phases[j]['complete']
-                关卡[j]+='✅' if complete == True else '⚪'
+                msg+='✅' if complete == True else '⚪'
         else:
             for j in range(4):
-                关卡[j]+='✅' 
+                msg+='✅' 
+        msg+='\n'
 
-    职业 = 职业.split()
-    length = len(职业)
-    职业msg  += f'             {职业[0]}'
-    职业msg  += f' {职业[1]}' if length > 1 else ''
-    职业msg  += f' {职业[2]}' if length > 2 else ''
-    msg = 职业msg + '\n'
-    msg += f'''第一关：{关卡[0]}
-第二关：{关卡[1]}
-第三关：{关卡[2]}
-第四关：{关卡[3]}
-【挑战查询】
-'''
+    msg += '【挑战查询】\n'
     for i in DSC['挑战']:
         name = DSC['挑战'][i]
         icon = '✅' if Record[i]['objectives'][0]['complete'] == True else '⚪'

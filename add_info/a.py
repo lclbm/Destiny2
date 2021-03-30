@@ -2,38 +2,12 @@ import re
 import os
 import json
 import requests
-mark = {'anonymous': None, 'font': 0,
-        'group_id': 924371658,
-        'message': [
-            {'type': 'text', 'data': {'text': 'rgergregreretert'}},
-            {'type': 'face', 'data': {'id': '178'}},
-            {'type': 'at', 'data': {'qq': '2287326985'}},
-            {'type': 'text', 'data': {'text': '    sfearearter'}},
-            {'type': 'image', 'data': {'file': 'f46784e63445c8b7b62e06bbca04d608.image',
-                                       'url': 'http://gchat.qpic.cn/gchatpic_new/614867321/924371658-2164051913-F46784E63445C8B7B62E06BBCA04D608/0?term=3'}},
-            {'type': 'at', 'data': {'qq': '614867321'}}
-        ],
-        'raw_message': '问rgergregreretert[CQ:face,id=178][CQ:at,qq=2287326985]    答sfearearter[CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image][CQ:at,qq=614867321]',
-        'user_id': 614867321}
-
-
-mark1 = {'anonymous': None, 'font': 0,
-         'group_id': 924371658,
-         'message': [
-             {'type': 'text', 'data': {'text': 'rgergregreretert'}},
-             {'type': 'face', 'data': {'id': '178'}},
-             {'type': 'at', 'data': {'qq': '2287326985'}},
-             {'type': 'text', 'data': {'text': '    sfearearter'}},
-             {'type': 'image', 'data': {'file': 'f46784e63445c8b7b62e06bbca04d608.image',
-                                        'url': 'http://gchat.qpic.cn/gchatpic_new/614867321/924371658-2164051913-F46784E63445C8B7B62E06BBCA04D608/0?term=3'}},
-             {'type': 'at', 'data': {'qq': '614867321'}}
-         ],
-         'raw_message': '绑定 阿 斯顿哇 额为 人体儿童 个如图热帖 热特瑞 特儿 他 76561198406711620',
-         'user_id': 614867321}
 
 
 root = os.getcwd()
-root = os.path.join(root, 'res', 'destiny2', 'reply')
+user_root = os.path.join(root, 'res', 'destiny2', 'reply', 'user')
+group_root = os.path.join(root, 'res', 'destiny2', 'reply', 'group')
+
 
 
 def read_json(file):
@@ -76,7 +50,7 @@ def add_josn(msg, mode):
         # raw_message = ''
         # for i in temp:
         #     raw_message += i
-        res = re.match(r'AddAll.*【(.+)】.*【(.+)】.*', raw_message)
+        res = re.match(r'AddAll.*[\(|（|【](.+)】.*【(.+)】.*', raw_message)
         if not res:
             return 0
         file = os.path.join(root, 'All.json')
