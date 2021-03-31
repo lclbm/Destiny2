@@ -209,16 +209,17 @@ async def test(session):
         return
 
 
-async def GetInfo(args) -> dict:
+async def GetInfo(args,components:list=[]) -> dict:
     global count
     count += 1
     result = await GetMembershipidAndMembershiptype(args)
     membershipid = result['membershipid']
     membershiptype = result['membershiptype_num']
-    response = await destiny.api.get_profile(membershiptype, membershipid, [200, 202,100, 104, 700,800, 900, 1100, 1000])
+    response = await destiny.api.get_profile(membershiptype, membershipid, components.extend(100))
     get_success(response, args)
-    if len(response['Response']['metrics']) == 1:
-        raise Error_Privacy(args)
+    #TODO：在这里修复好检测玩家数据是不是隐私
+    # if len(response['Response']['metrics']) == 1:
+    #     raise Error_Privacy(args)
     response['Response']['membershipid'] = membershipid
     response['Response']['membershiptype_num'] = membershiptype
     response['Response']['membershiptype_char'] = result['membershiptype_char']
@@ -351,7 +352,7 @@ async def GetPlayerpvp(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[900,1000])
         record = info['profileRecords']['data']['records']
         args = info['profile']['data']['userInfo']['displayName']
         metrics = info['metrics']['data']['metrics']
@@ -446,7 +447,7 @@ async def d2_activity(session):
             args = hardlink
         else:
             args = session.current_arg
-        res = await GetInfo(args)
+        res = await GetInfo(args,[200])
         args = res['profile']['data']['userInfo']['displayName']
         msg = args + '\n'
         for characterid in res['characters']['data']:
@@ -498,7 +499,7 @@ async def Elo(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetMembershipidAndMembershiptype(args)
+        info = await GetMembershipidAndMembershiptypƒe(args)
         membershipid = info['membershipid']
         membershiptype = info['membershiptype_num']
         url = f'https://api.tracker.gg/api/v2/destiny-2/standard/profile/{membershiptype}/{membershipid}/segments/playlist?season=13'
@@ -547,7 +548,7 @@ async def getDataFireteam(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[1000])
         args = info['profile']['data']['userInfo']['displayName']
         if len(info['profileTransitoryData']) == 1:
             raise FailToGet(args, '玩家目前不在线')
@@ -593,15 +594,14 @@ async def KillWeaponData(session):
             args = hardlink
         else:
             args = session.current_arg
-        if '泰坦' in args or '猎人' in args or '术士' in args:
-            if len(args.split(' ')) == 1:
-                await session.finish('请按照正确的格式输入指令\n指令样例：击杀 何志武223 术士', at_sender=True)
-            if len(args.split(' ')) > 2:
-                await session.finish('查询的玩家用户名中有空格，请使用队伍码查询', at_sender=True)
-            id = args.split(' ')[0]
-            classtype = args.split()[1]
-            if classtype != '泰坦' and classtype != '猎人' and classtype != '术士':
-                await session.finish(f' {id} ，查询的玩家用户名中有空格，请使用队伍码查询', at_sender=True)
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
+        if res1:
+            res = res1
+        else:
+            res = re.match(r'(.+) +(术士|猎人|泰坦)',args)
+        if res:
+            id = res.group(1)
+            classtype = res.group(2)
             info = await GetInfo(id)
             args = info['profile']['data']['userInfo']['displayName']
             membershipid = info['membershipid']
@@ -686,9 +686,9 @@ async def KillWeaponData(session):
             msg += f'🧨回复 d2 以查看其他功能{AppendInfo}'
             await session.finish(msg, at_sender=True)
         else:
-            await session.finish('请输入需要查询的职业\n职业可选：术士/猎人/泰坦\n指令样例：击杀数据 何志武223 术士', at_sender=True)
+            raise Exception('输入格式有误，指令格式：\n👉击杀 队伍码/用户名 职业')
     except Exception as e:
-        await session.send(f'{e}')
+        await session.send(f'{e}',at_sender=True)
 
 
 def Check_Penguin(info):
@@ -1320,7 +1320,23 @@ async def Check_DSC_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
-
+@ on_command('巅峰', aliases=('巅峰球'),only_to_me=False)
+async def Check_DSC_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
+        if res1:
+            res = res1
+        else:
+            res = re.match(r'(.+) +(术士|猎人|泰坦)',args)
+        if res:
+            id = res.group(1)
+            classtype = res.group(2)
+            info = await GetInfo(id)
 
 
 
