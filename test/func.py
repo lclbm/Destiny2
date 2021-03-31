@@ -218,6 +218,7 @@ async def GetInfo(args,components:list=[]) -> dict:
     response = await destiny.api.get_profile(membershiptype, membershipid, components.extend(100))
     get_success(response, args)
     #TODO：在这里修复好检测玩家数据是不是隐私
+    #TODO：添加玩家的绑定删除的消息提示
     # if len(response['Response']['metrics']) == 1:
     #     raise Error_Privacy(args)
     response['Response']['membershipid'] = membershipid
@@ -602,7 +603,7 @@ async def KillWeaponData(session):
         if res:
             id = res.group(1)
             classtype = res.group(2)
-            info = await GetInfo(id)
+            info = await GetInfo(id,[200])
             args = info['profile']['data']['userInfo']['displayName']
             membershipid = info['membershipid']
             membershiptype = info['membershiptype_char']
@@ -717,7 +718,7 @@ async def Check_Penguin_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         msg = f'{args}【企鹅收集】\n'
         res = msg+Check_Penguin(info)
@@ -755,7 +756,7 @@ async def Check_egg_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         msg = f'{args}\n【腐化卵🥚收集】\n'
         res = msg+Check_egg(info)
@@ -803,7 +804,7 @@ async def gambit_info(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[900,1000])
         args = info['profile']['data']['userInfo']['displayName']
         res = get_gambit(info)
         head = f'{args}\n' + res+'#回复d2以查看其他功能'
@@ -838,7 +839,7 @@ async def Check_zengfu_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args，[900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zengfu(info)
         head = f'{args}\n' + res + '#回复d2以查看其他功能'
@@ -978,7 +979,7 @@ async def Check_bones_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_bones(info)
         head = f'{args}\n' + res
@@ -1014,7 +1015,7 @@ async def Check_cats_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_cats(info)
         head = f'{args}\n' + res
@@ -1083,7 +1084,7 @@ async def Check_chenghao_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_chenghao(info)
         head = f'{args}\n' + res
@@ -1118,7 +1119,7 @@ async def Check_exo_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_exo(info)
         head = f'{args}\n' + res
@@ -1153,7 +1154,7 @@ async def Check_suipian_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_suipian(info)
         head = f'{args}\n' + res
@@ -1186,7 +1187,7 @@ async def Check_zhengzhang_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[700])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zhengzhang(info)
         head = f'{args}\n' + res
@@ -1221,7 +1222,7 @@ async def Check_saijitiaozhan_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[700])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_saijitiaozhan(info)
         head = f'{args}\n' + res
@@ -1261,7 +1262,7 @@ async def Check_qianzhao_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_qianzhao(info)
         head = f'{args}\n' + res
@@ -1311,7 +1312,7 @@ async def Check_DSC_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[200,900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_DSC(info)
         head = f'{args}\n' + res
