@@ -2,12 +2,13 @@ import re
 import os
 import json
 import requests
+import random
 
 
 root = os.getcwd()
-user_root = os.path.join(root, 'res', 'destiny2', 'reply', 'user')
-group_root = os.path.join(root, 'res', 'destiny2', 'reply', 'group')
-
+root = os.path.join(root, 'res', 'destiny2', 'reply')
+user_root = os.path.join(root, 'user')
+group_root = os.path.join(root,  'group')
 
 
 def read_json(file):
@@ -26,230 +27,405 @@ def write_json(dict_temp, path):
         f.write(json.dumps(dict_temp, ensure_ascii=False, indent=2))
 
 
-def download_img(imgurl, name):
+def download_img(imgurl, name, mode):
     rsp = requests.get(imgurl)
     if rsp.status_code == 200:
         content = rsp.content
         # 注意下面open里面的mode是"wb+", 因为content的类型是bytes
-        file_path = os.path.join(root, f'{name}.gif')
+        file_path = os.path.join(user_root, f'{name}.gif') if mode == 0 else os.path.join(
+            group_root, f'{name}.gif')
+        file_path = os.path.join(
+            root, f'{name}.gif') if mode == 2 else file_path
         with open(file_path, "wb+") as f:
             f.write(content)
             return f'[CQ:image,file=file:///{file_path}]'
     return None
 
 
-def add_josn(msg, mode):
-    if mode == 0:  # 管理员 All.json
-        if msg['user_id'] != 614867321:
-            return 0
-        raw_message = msg['raw_message']
-        raw_message = raw_message.replace('&#91;', '[')
-        raw_message = raw_message.replace('&#93;', ']')
-        message = msg['message']
-        # temp = raw_message.split()
-        # raw_message = ''
-        # for i in temp:
-        #     raw_message += i
-        res = re.match(r'AddAll.*[\(|（|【](.+)】.*【(.+)】.*', raw_message)
-        if not res:
-            return 0
-        file = os.path.join(root, 'All.json')
-        dict_temp = {}
-        if os.path.exists(file):  # 如果文件存在的话
-            dict_temp = read_json(file)
-        question = res.group(1)
-        # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
-        answer = res.group(2)
-        print(f'\n\n{question}\n\n{answer}\n\n')
-        answer_res = re.match(r'.*\[CQ:image,file=(.+\.image)\].*', answer)
-        # 返回的是f46784e63445c8b7b62e06bbca04d608.image
-        if answer_res:  # 如果存在图片
-            file_name = answer_res.group(1)
-            print(f'\n\n{file_name}\n\n')
-            for i in message:
-                if i['type'] == 'image' and i['data']['file'] == file_name:
-                    cqimg_file = download_img(
-                        i['data']['url'], file_name)
-                    if not cqimg_file:
-                        return None
-                    break
-            answer = answer.replace(
-                f'[CQ:image,file={file_name}]', cqimg_file)  # .img替换成了file:///
-        dict_temp[question] = {'type': '自定义', 'msg': answer}
-        write_json(dict_temp, file)
+def add_reply(msg):
+    raw_message = msg['raw_message']
+    message = msg['message']
+    user_id = msg['user_id']
+    group_id = msg['group_id']
+    raw_message = raw_message.replace('\r', r'\r')
+    raw_message = raw_message.replace('\n', r'\n')
+    res = re.match(
+        r'添加(个人|群组).*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    # 0是个人词库 1是群组词库
+    file = os.path.join(user_root, f'{user_id}.json') if res.group(1) == '个人' else os.path.join(
+        group_root, f'{group_id}.json')
+    mode = 0 if res.group(1) == '个人' else 1
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = res.group(2)
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(3)
+    answer = answer.replace(r'\r', '\r')
+    answer = answer.replace(r'\n', '\n')
+    answer_res = re.match(r'.*\[CQ:image,file=(.+\.image)\].*', answer)
+    # 返回的是f46784e63445c8b7b62e06bbca04d608.image
+    print('没问题')
+    if answer_res:  # 如果存在图片
+        file_name = answer_res.group(1)
+        for i in message:
+            if i['type'] == 'image':
+                file_name = i['data']['file']
+                cqimg_file = download_img(
+                    i['data']['url'], file_name, mode)
+                if not cqimg_file:
+                    raise Exception('保存图片时发生了错误，请重试')
+                answer = answer.replace(
+                    f'[CQ:image,file={file_name}]', cqimg_file)  # .img替换成了file:///
+    if question in dict_temp:
+        length = len(dict_temp[question]['msg'])
+        dict_temp[question]['msg'].append(answer)
+        length += 1
+    else:
+        dict_temp[question] = {'type': '自定义', 'msg': [answer]}
+        length = 1
+    write_json(dict_temp, file)
+    return(f'添加成功，当前问题下现在有[{length}]个回答')
 
-    if mode == 1:  # 用户绑定 614867321.json
-        raw_message = msg['raw_message']
-        user_id = msg['user_id']
-        print(raw_message)
-        res = re.match(r'绑定 +(【.*】)? *【(7656\d{13})】.*', raw_message)
-        if not res:
-            return None
-        name1 = res.group(1)
-        num = res.group(2)
-        print(res.groups())
-        file = os.path.join(root, f'{user_id}.json')
-        dict_temp = {}
-        if os.path.exists(file):  # 如果文件存在的话
-            dict_temp = read_json(file)
-        if not name1:
-            name1 = '_self_'
+
+def add_all(msg):
+    raw_message = msg['raw_message']
+    message = msg['message']
+    user_id = msg['user_id']
+    if user_id != 614867321:
+        raise Exception('需要小日向的管理权限才可以修改全局词库')
+    raw_message = raw_message.replace('\r', r'\r')
+    raw_message = raw_message.replace('\n', r'\n')
+    res = re.match(
+        r'添加全局.*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    file = os.path.join(root, 'All.json')
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = res.group(1)
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(2)
+
+    if res.group(3) == '重定向':
+        if answer in dict_temp:
+            if 'alias' in dict_temp[answer]:
+                dict_temp[answer]['alias'].append(question)
+                write_json(dict_temp, file)
+                return (f'重定向成功，已将{question}定向到{answer}\n{question}->{answer} Flag=0')
+            else:
+                dict_temp[answer]['alias'] = [question]
+                write_json(dict_temp, file)
+                return (f'重定向成功，已将{question}定向到{answer}\n{question}->{answer} Flag=1')
         else:
-            name1 = name1.replace('【', '')
-            name1 = name1.replace('】', '')
-        dict_temp[name1] = {'type': '绑定', 'msg': num}
-        write_json(dict_temp, file)
+            raise Exception(f'重定向失败，请检查{answer}是否在词库中')
 
-    if mode == 2:  # 用户自定义回复 614867321.json
-        raw_message = msg['raw_message']
-        raw_message = raw_message.replace('&#91;', '[')
-        raw_message = raw_message.replace('&#93;', ']')
-        message = msg['message']
-        user_id = msg['user_id']
-        print(raw_message)
-        # temp = raw_message.split()
-        # raw_message = ''
-        # for i in temp:
-        #     raw_message += i
-        res = re.match(r'添加.*【(.+)】.*【(.+)(】?)', raw_message)
-        if not res:
-            return 0
-        print(res.groups())
-        file = os.path.join(root, f'{user_id}.json')
-        dict_temp = {}
-        if os.path.exists(file):  # 如果文件存在的话
-            dict_temp = read_json(file)
-        question = res.group(1)
-        # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
-        answer = res.group(2)
-        if '】' in answer:
-            answer = answer.replace('】','')
-        answer_res = re.match(r'.*\[CQ:image,file=(.+\.image)\].*', answer)
+    answer_res = re.match(r'.*\[CQ:image,file=(.+\.image)\].*', answer)
+    # 返回的是f46784e63445c8b7b62e06bbca04d608.image
+    if answer_res:  # 如果存在图片
+        file_name = answer_res.group(1)
+        for i in message:
+            if i['type'] == 'image':
+                file_name = i['data']['file']
+                cqimg_file = download_img(
+                    i['data']['url'], file_name, 2)  # 2为全局
+                if not cqimg_file:
+                    return None
+                answer = answer.replace(
+                    f'[CQ:image,file={file_name}]', cqimg_file)  # .img替换成了file:///
+    if question in dict_temp:
+        length = len(dict_temp[question]['msg'])
+        dict_temp[question]['msg'].append(answer)
+        length += 1
+        # answer需要换回去吗？？？
+    else:
+        dict_temp[question] = {'type': 'perk' if 'perk' in res.group(
+            3) else '自定义', 'msg': [answer]}
+        length = 1
+    write_json(dict_temp, file)
+    return(f'添加成功，当前问题下现在有[{length}]个回答')
 
-        # 返回的是f46784e63445c8b7b62e06bbca04d608.image
-        if answer_res:  # 如果存在图片
-            file_name = answer_res.group(1)
-            for i in message:
-                if i['type'] == 'image' and i['data']['file'] == file_name:
-                    cqimg_file = download_img(
-                        i['data']['url'], file_name)
-                    if not cqimg_file:
-                        return None
-                    break
-            answer = answer.replace(
-                f'[CQ:image,file={file_name}]', cqimg_file)  # .img替换成了file:///
-        dict_temp[question] = {'type': '自定义', 'msg': answer}
-        write_json(dict_temp, file)
-    return 1
 
-    if mode == 3:
-        pass
-
+def get_msg_from_msgdict(msg: list):
+    length = len(msg)
+    # keys = list(msg.keys())
+    # key = keys[random.randint(0,length-1)]
+    key = random.randint(0, length-1)
+    return msg[key]
 
 
 def get_msg(msg):
     user_id = msg['user_id']
+    group_id = msg['group_id']
     checkmsg = msg['raw_message']
     file_all = os.path.join(root, 'All.json')
-    file_user = os.path.join(root, f'{user_id}.json')
+    file_group = os.path.join(group_root, f'{group_id}.json')
+    file_user = os.path.join(user_root, f'{user_id}.json')
     dict_temp = {}
     if os.path.exists(file_all):  # 如果文件存在的话
         dict_temp = read_json(file_all)
+        if checkmsg in dict_temp:
+            print(dict_temp[checkmsg]['msg'])
+            return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
+        for i in dict_temp:
+            if 'alias' in dict_temp[i] and checkmsg in dict_temp[i]['alias']:
+                return get_msg_from_msgdict(dict_temp[i]['msg'])
+    if os.path.exists(file_group):  # 如果文件存在的话
+        dict_temp = read_json(file_group)
         if checkmsg in dict_temp and dict_temp[checkmsg]['type'] == '自定义':
             print(dict_temp[checkmsg]['msg'])
-            return dict_temp[checkmsg]['msg']
+            return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
     if os.path.exists(file_user):  # 如果文件存在的话
         dict_temp = read_json(file_user)
         if checkmsg in dict_temp and dict_temp[checkmsg]['type'] == '自定义':
-            return dict_temp[checkmsg]['msg']
+            return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
     return None
 
 
-def lookup(msg):
+def lookup_user(msg):
     user_id = msg['user_id']
-    checkmsg = msg['raw_message']
-    file_all = os.path.join(root, 'All.json')
-    dict_temp = {}
-    if '绑定查询 All' in checkmsg:
-        if os.path.exists(file_all):  # 如果文件存在的话
-            dict_temp = read_json(file_all)
-            msg = '全局的自定义问答和绑定数据如下：\n'
-            for i in dict_temp:
-                if 'CQ:image' in i:
-                    msg += '[图片]|'
-                else:
-                    msg += i + '|'
-            print(msg)
-            return msg
-        return '全局没有数据，请联系小日向作者'
-    file_user = os.path.join(root, f'{user_id}.json')
+    file_user = os.path.join(user_root, f'{user_id}.json')
     if os.path.exists(file_user):  # 如果文件存在的话
         dict_temp = read_json(file_user)
-        msg = '你的自定义问答和绑定数据如下：\n'
+        msg = '你的问答和绑定数据如下：\n'
+        绑定 = ''
+        问答 = ''
         for i in dict_temp:
             if dict_temp[i]['type'] == '绑定':
                 name = i
-                if 'CQ:image' in i:
-                    name = '[图片]'
                 id = dict_temp[i]['msg']
-                msg += f'{name}:{id}|'
+                绑定 += f'{name}:{id}\n'
             else:
                 if 'CQ:image' in i:
-                    msg += '[图片]|'
+                    问答 += '图片：'
                 else:
-                    msg += i + '|'
-        msg += '\n输入绑定查询 All以查看全局问答'
-        print(msg)
+                    问答 += f'{i}：'
+                length = len(dict_temp[i]['msg'])
+                问答 += f'{length}条回答\n'
+        msg = f'【个人绑定】\n{绑定}【个人词库】\n{问答}'
+        msg += '🎈群组词库/全局词库也可以查查看哦'
         return msg
-    return '你还没有数据，请尝试添加问答和绑定'
+    raise Exception('你还没有数据，请先尝试添加问答和绑定')
+
+
+def lookup_group(msg):
+    group_id = msg['group_id']
+    file_group = os.path.join(group_root, f'{group_id}.json')
+    if os.path.exists(file_group):  # 如果文件存在的话
+        dict_temp = read_json(file_group)
+        msg = '本群问答和绑定数据如下：\n'
+        绑定 = ''
+        问答 = ''
+        for i in dict_temp:
+            if dict_temp[i]['type'] == '绑定':
+                name = i
+                id = dict_temp[i]['msg']
+                绑定 += f'{name}:{id}\n'
+            else:
+                if 'CQ:image' in i:
+                    问答 += '图片：'
+                else:
+                    问答 += f'{i}：'
+                length = len(dict_temp[i]['msg'])
+                问答 += f'{length}条回答\n'
+        msg = f'【群组绑定】\n{绑定}【群组词库】\n{问答}'
+        msg += '🎈个人词库/全局词库也可以看看哦'
+        return msg
+    raise Exception('该群还没有数据，请先尝试添加问答和绑定')
+
+
+def lookup_all(msg):
+    path = os.path.join(root, f'All.json')
+    if os.path.exists(path):  # 如果文件存在的话
+        dict_temp = read_json(path)
+        msg = '全局问答和绑定数据如下：\n'
+        绑定 = ''
+        问答 = ''
+        for i in dict_temp:
+            if dict_temp[i]['type'] == '绑定':
+                name = i
+                id = dict_temp[i]['msg']
+                绑定 += f'{name}:{id}\n'
+            else:
+                if 'CQ:image' in i:
+                    问答 += '图片：'
+                else:
+                    问答 += f'{i}：'
+                length = len(dict_temp[i]['msg'])
+                问答 += f'{length}条回答\n'
+        msg = f'【全局绑定】\n{绑定}【全局问答】\n{问答}'
+        msg += '🎈个人词库/群组词库也可以看看哦'
+        return msg
+    raise Exception('全局还没有数据，请先尝试添加问答和绑定')
 
 
 def delimg(msg):
-    res = re.match(r'.*file:///(.*gif)', msg)
-    if res:
-        path = res.group(1)
-        if os.path.exists(path):
-            os.remove(path)
+    for i in msg:
+        res = re.match(r'.*file:///(.*gif).*', i)
+        if res:
+            path = res.group(1)
+            if os.path.exists(path):
+                os.remove(path)
 
 
-def del_tie_user(msg):
+def roll(mode, role):
+    if mode == '群组':
+        if role == 'owner':
+            return 0
+        if role == 'admin':
+            num = random.randint(3, 10)
+            if num < 5:
+                num=str(num).zfill(2)
+                raise Exception(f'/random 3-10 : {num}\n删除失败了，可以再试试嗷')
+        else:
+            num = random.randint(1, 10)
+            if num < 6:
+                num=str(num).zfill(2)
+                raise Exception(f'/random 1-10 : {num}\n删除失败了，可以再试试嗷')
+                
+
+def del_reply(msg):
     user_id = msg['user_id']
+    group_id = msg['group_id']
     checkmsg = msg['raw_message']
-    checkmsg = checkmsg.replace('&#91;', '[')
-    checkmsg = checkmsg.replace('&#93;', ']')
-    if '绑定删除 All' in checkmsg and (user_id == 614867321):
-        res = re.match(r'绑定删除 All.*【(.+)】.*', checkmsg)
-        if not res:
-            return '指令错误，输入绑定帮助以查看帮助'
-        checkmsg = res.group(1)
-        file_all = os.path.join(root, 'All.json')
-        if os.path.exists(file_all):  # 如果文件存在的话
-            dict_temp = read_json(file_all)
-            if checkmsg in dict_temp:
-                delimg(dict_temp[checkmsg]['msg'])
-                del dict_temp[checkmsg]
-                write_json(dict_temp, file_all)
-                msg = f'{checkmsg} 全局删除成功'
-                return msg
-            else:
-                return '没有找到该绑定数据，输入绑定帮助以查看帮助'
-        return '全局绑定数据缺失'
-
-    res = re.match(r'绑定删除.*【(.+)】.*', checkmsg)
+    role = msg['sender']['role']
+    file_group = os.path.join(group_root, f'{group_id}.json')
+    file_user = os.path.join(user_root, f'{user_id}.json')
+    res = re.match(r'删除(个人|群组).*[/【（(](.+)[/】）)].*', checkmsg)
     if not res:
-        return '指令错误，输入绑定帮助以查看帮助'
-    checkmsg = res.group(1)
-    file_user = os.path.join(root, f'{user_id}.json')
-    dict_temp = {}
-    if os.path.exists(file_user):  # 如果文件存在的话
-        dict_temp = read_json(file_user)
+        raise Exception('删除格式错误，请输入绑定帮助以查看相关教程')
+    path = file_user if res.group(1) == '个人' else file_group
+    checkmsg = res.group(2)
+    if os.path.exists(path):  # 如果文件存在的话
+        dict_temp = read_json(path)
         if checkmsg in dict_temp:
+            roll(res.group(1), role)
             delimg(dict_temp[checkmsg]['msg'])
             del dict_temp[checkmsg]
-            write_json(dict_temp, file_user)
-            msg = f'{checkmsg} 删除成功'
-            return msg
+            write_json(dict_temp, path)
+            return f'[{checkmsg}]删除成功'
         else:
-            return '没有找到该绑定数据，输入绑定帮助以查看帮助'
+            raise Exception(f'删除的问题[{checkmsg}]不在词库内')
+    else:
+        raise Exception(f'要删除的词库不存在，请先创建词库')
 
-    return '你还没有数据，请尝试添加问答和绑定'
+
+def del_all(msg):
+    checkmsg = msg['raw_message']
+    user_id = msg['user_id']
+    if user_id != 614867321:
+        raise Exception('需要小日向的管理权限才可以修改全局词库')
+    path = os.path.join(root, 'All.json')
+    res = re.match(r'删除全局.*[/【（(](.+)[/】）)].*', checkmsg)
+    if not res:
+        raise Exception('删除格式错误，请输入绑定帮助以查看相关教程')
+    checkmsg = res.group(1)
+    if os.path.exists(path):  # 如果文件存在的话
+        dict_temp = read_json(path)
+        for i in dict_temp:
+            if i == checkmsg:
+                delimg(dict_temp[i]['msg'])
+                del dict_temp[i]
+                write_json(dict_temp, path)
+                return f'全局词库[{checkmsg}]删除成功'
+            if 'alias' in dict_temp[i] and checkmsg in dict_temp[i]['alias']:
+                dict_temp[i]['alias'].remove(checkmsg)
+                write_json(dict_temp, path)
+                return f'全局词库重定向[{checkmsg}]删除成功\nx{checkmsg}x->{i}'
+        else:
+            raise Exception(f'[{checkmsg}]不在全局词库内')
+    else:
+        raise Exception(f'要删除的词库不存在，请先创建词库')
+
+
+
+def tie_all(msg):
+    raw_message = msg['raw_message']
+    user_id = msg['user_id']
+    if user_id != 614867321:
+        raise Exception('需要小日向的管理权限才可以修改全局绑定')
+    res = re.match(
+        r'绑定全局.*[\(（【/](.+)[\)）】/].*[\(（【/](7656\d{13})[\)）】/].*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    file = os.path.join(root, 'All.json')
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = res.group(1)
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(2)
+    if question in dict_temp and dict_temp[question]['type'] != '绑定':
+        raise Exception('已经有自定义回复占据了这个位置啦，小日向建议你换一个关键词哦')
+    else:
+        dict_temp[question] = {'type': '绑定' , 'msg': answer}
+        write_json(dict_temp, file)
+        return (f'全局绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧')
+        
+def tie_group(msg):
+    raw_message = msg['raw_message']
+    group_id = msg['group_id']
+    res = re.match(
+        r'绑定群组.*[\(（【/](.+)[\)）】/].*[\(（【/](7656\d{13})[\)）】/].*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    file = os.path.join(group_root, f'{group_id}.json')
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = res.group(1)
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(2)
+    if question in dict_temp and dict_temp[question]['type'] != '绑定':
+        raise Exception('已经有自定义回复占据了这个位置啦，小日向建议你换一个关键词哦')
+    else:
+        dict_temp[question] = {'type': '绑定' , 'msg': answer}
+        write_json(dict_temp, file)
+        return (f'群组绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧\n❗该绑定仅在本群有效')
+        
+def tie_user(msg):
+    raw_message = msg['raw_message']
+    user_id = msg['user_id']
+    res = re.match(
+        r'绑定个人.*[\(（【/](.+)[\)）】/].*[\(（【/](7656\d{13})[\)）】/].*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    file = os.path.join(user_root, f'{user_id}.json')
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = res.group(1)
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(2)
+    if question in dict_temp and dict_temp[question]['type'] != '绑定':
+        raise Exception('已经有自定义回复占据了这个位置啦，小日向建议你换一个关键词哦')
+    else:
+        dict_temp[question] = {'type': '绑定' , 'msg': answer}
+        write_json(dict_temp, file)
+        return (f'个人绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧\n❗该绑定仅对你有效')
+        
+def tie_urself(msg):
+    raw_message = msg['raw_message']
+    user_id = msg['user_id']
+    res = re.match(
+        r'绑定 *(7656\d{13}).*', raw_message)
+    if not res:
+        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+    file = os.path.join(user_root, f'{user_id}.json')
+    dict_temp = {}
+    if os.path.exists(file):  # 如果文件存在的话
+        dict_temp = read_json(file)
+    question = '_self_'
+    # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
+    answer = res.group(1)
+    if question in dict_temp and dict_temp[question]['type'] != '绑定':
+        raise Exception('已经有自定义回复占据了这个位置啦，小日向建议你换一个关键词哦')
+    else:
+        dict_temp[question] = {'type': '绑定' , 'msg': answer}
+        write_json(dict_temp, file)
+        return (f'已经为你绑定成功了，🎉以后你只需要输入指令头就可以查询你自己的战绩啦！\n输入👉智谋👈试试吧\n❗该绑定仅对你有效')
+        
+

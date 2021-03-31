@@ -1,42 +1,24 @@
+import re
+import hoshino
+from hoshino import Service, R
+import asyncio
+from nonebot import *
 import sys
 import os
 print(os.getcwd())
 sys.path.append(os.getcwd())
 sys.path.append('C:/HoshinoBot/hoshino/modules/add_info')
-from a import add_josn,get_msg,lookup,del_tie_user
-from nonebot import *
-import asyncio
-from hoshino import Service, R
-import hoshino
-import re
-
+from a import *
 
 
 sv = hoshino.Service('add')
 _bot = get_bot()
 
 
-@sv.on_command('绑定帮助')
-async def Help(session):
-    msg = '''❗现在需要加入【 】作为标识符
-❗绑定/添加后面需要有一个空格
-🚀绑定自己的队伍码
-指令：绑定 【7656xxx16】
-例子：绑定 【7656119xx】
-🚀绑定朋友的队伍码
-指令：绑定 【昵称】【7656xxx16】
-例子：绑定 【菠萝】【7656xxx16】
-🎐自定义问答
-指令：添加 【问题】【回答】
-例子：添加 【快进哥】【块茎哥】
-🎐绑定查询
-指令1：绑定查询
-指令2：绑定查询 All
-🎐绑定删除
-指令：绑定删除 【文本】
-例子：绑定删除 【快进哥】'''
-    await session.send(msg)
-
+# @sv.on_command('绑定帮助')
+# async def Help(session):
+#     msg = '''待更新'''
+#     await session.send(msg)
 
 
 @sv.on_message('group')
@@ -44,71 +26,111 @@ async def check(*params):
     bot, ctx = (_bot, params[0]) if len(params) == 1 else params
     msg = get_msg(ctx)
     if msg:
-        await bot.send(ctx,msg)
+        print(msg)
+        await bot.send(ctx, msg)
 
 
-
-@sv.on_command('AddAll')
+@sv.on_command('添加全局')
 async def add_info_all(session):
     try:
-        # if not add_josn(session.ctx, 0):
-        #     await session.send('该命令需要小日向的管理权限',at_sender=True)
-        # else:
-            await session.send('AddAll ____test\r\nline1\r\nline2\r\n[CQ:image,file=0e3ab320fa121e0060d191fe98a154c5.image]\r\n再换一行\r\n[CQ:image,file = 0965355524cb9135f18e50a54c61db13.image]',at_sender=True)
+        msg = add_all(session.ctx)
+        await session.send(msg,at_sender=True)
     except Exception as e:
-        await session.send(f'{e}')
+        await session.send(f'{e}',at_sender=True)
 
 @sv.on_command('添加个人')
 async def add_info_user(session):
     try:
-        if not add_josn(session.ctx, 2):
-            await session.send('添加失败，输入绑定帮助以查看帮助',at_sender=True)
-        else:
-            await session.send('成功',at_sender=True)
+        msg = add_reply(session.ctx)
+        await session.send(msg,at_sender=True)
     except Exception as e:
-        await session.send(f'{e}')
+        await session.send(f'{e}',at_sender=True)
 
 @sv.on_command('添加群组')
 async def add_info_group(session):
     try:
-        if not add_josn(session.ctx, 3):
-            await session.send('添加失败，输入绑定帮助以查看帮助',at_sender=True)
-        else:
-            await session.send('成功',at_sender=True)
+        msg = add_reply(session.ctx)
+        await session.send(msg,at_sender=True)
     except Exception as e:
-        await session.send(f'{e}')
+        await session.send(f'{e}',at_sender=True)
 
-
-
-@sv.on_command('绑定')
-async def add_tie(session):
+@sv.on_command('个人词库')
+async def look_user(session):
     try:
-        if not add_josn(session.ctx, 1):
-            res = re.match(r'(7656\d{13}$)', session.current_arg_text.strip())
-            if res:
-                id = res.group(1)
-                await session.send('绑定失败，小日向发现你没有添加【】符号，小日向给你提供了正确的绑定指令，复制粘贴试试哦', at_sender=True)
-                await session.send(f'绑定 【{id}】')
-            else:
-                await session.send('绑定失败，小日向给你发一个绑定格式吧，修改一下再发给我哦\n（❗队伍码需要输入17位纯数字）', at_sender=True)
-                await session.send(f'绑定 【在这里输入你的队伍码】')
-        else:
-            await session.send('绑定成功',at_sender=True)
-    except Exception as e:
-        await session.send(f'{e}')
-
-@sv.on_command('绑定查询')
-async def look_tie(session):
-    try:
-        msg = lookup(session.ctx)
+        msg = lookup_user(session.ctx)
         await session.send(msg)
     except Exception as e:
         await session.send(f'{e}')
 
-@sv.on_command('绑定删除')
-async def delete_tie(session):
+@sv.on_command('群组词库')
+async def look_group(session):
     try:
-        msg = del_tie_user(session.ctx)
+        msg = lookup_group(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('全局词库')
+async def look_all(session):
+    try:
+        msg = lookup_all(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+
+@sv.on_command('删除个人')
+async def delete_tie_user(session):
+    try:
+        msg = del_reply(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('删除群组')
+async def delete_tie_group(session):
+    try:
+        msg = del_reply(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('删除全局')
+async def delete_tie_all(session):
+    try:
+        msg = del_all(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('绑定全局')
+async def tieall(session):
+    try:
+        msg = tie_all(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('绑定群组')
+async def tiegroup(session):
+    try:
+        msg = tie_group(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('绑定个人')
+async def tieuser(session):
+    try:
+        msg = tie_user(session.ctx)
+        await session.send(msg)
+    except Exception as e:
+        await session.send(f'{e}')
+
+@sv.on_command('绑定')
+async def tieurself(session):
+    try:
+        msg = tie_urself(session.ctx)
         await session.send(msg)
     except Exception as e:
         await session.send(f'{e}')
