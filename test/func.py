@@ -690,9 +690,9 @@ async def KillWeaponData(session):
             msg += f'🧨回复 d2 以查看其他功能{AppendInfo}'
             await session.finish(msg, at_sender=True)
         else:
-            raise Exception('输入格式有误，指令格式：\n👉击杀 队伍码/用户名 职业')
+            raise Exception('❗指令格式错误啦\n👉击杀 码/名 职业')
     except pydest.PydestException as err:
-        await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{e}',at_sender=True)
+        await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{err}',at_sender=True)
     except Exception as e:
         await session.send(f'{e}',at_sender=True)
 
