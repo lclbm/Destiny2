@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC,巅峰,宗师
 from data.tie import gethardlink
 from daily.report import getdailyreport
 
@@ -209,16 +209,18 @@ async def test(session):
         return
 
 
-async def GetInfo(args,components:list=[]) -> dict:
+async def GetInfo(args,components=[]) -> dict:
     global count
     count += 1
     result = await GetMembershipidAndMembershiptype(args)
     membershipid = result['membershipid']
     membershiptype = result['membershiptype_num']
-    response = await destiny.api.get_profile(membershiptype, membershipid, components.extend(100))
+    components.extend([100])
+    response = await destiny.api.get_profile(membershiptype, membershipid, components)
     get_success(response, args)
     #TODO：在这里修复好检测玩家数据是不是隐私
     #TODO：添加玩家的绑定删除的消息提示
+    #TODO：巅峰球查询有点简陋
     # if len(response['Response']['metrics']) == 1:
     #     raise Error_Privacy(args)
     response['Response']['membershipid'] = membershipid
@@ -261,7 +263,7 @@ async def GetPlayerProfile(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args,[900])
         args = info['profile']['data']['userInfo']['displayName']
         membershipid = info['profile']['data']['userInfo']['membershipId']
         url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
@@ -334,12 +336,12 @@ async def GetPlayerProfile(session):
             if get_flawless(i, info):
                 head = f'💎【{raidname}】'
             else:
-                head = f'📕【{raidname}】'
+                head = f'⚪【{raidname}】'
             msg += \
                 f'''{head}🚀{time}
-      🔘{full_clears:^3}/✅{clears:^3}🎓{sherpaCount:^3}
+      🎐{full_clears:^3}/🎯{clears:^3}🎓{sherpaCount:^3}
 '''
-        msg += f'#回复d2以查看其他功能\n💎无暇🔘全程✅通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
+        msg += f'#回复d2以查看其他功能\n💎无暇🎐全程🎯通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
         await session.send(msg, at_sender=True)
     except Exception as err:
         await session.send(f'{err}', at_sender=True)
@@ -353,10 +355,11 @@ async def GetPlayerpvp(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900,1000])
+        info = await GetInfo(args,[900,1100])
         record = info['profileRecords']['data']['records']
-        args = info['profile']['data']['userInfo']['displayName']
         metrics = info['metrics']['data']['metrics']
+        args = info['profile']['data']['userInfo']['displayName']
+        
         kill = metrics['811894228']['objectiveProgress']['progress']
         reset = metrics['3626149776']['objectiveProgress']['progress']
         kda = int(metrics['871184140']['objectiveProgress']['progress']) / 100
@@ -500,7 +503,7 @@ async def Elo(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetMembershipidAndMembershiptypƒe(args)
+        info = await GetMembershipidAndMembershiptype(args)
         membershipid = info['membershipid']
         membershiptype = info['membershiptype_num']
         url = f'https://api.tracker.gg/api/v2/destiny-2/standard/profile/{membershiptype}/{membershipid}/segments/playlist?season=13'
@@ -537,7 +540,7 @@ async def Elo(session):
         await session.send(msg, at_sender=True)
     except TypeError:
         await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
-    except FailToGet as e:
+    except Exception as e:
         await session.send(f'{e}', at_sender=True)
 
 
@@ -688,6 +691,8 @@ async def KillWeaponData(session):
             await session.finish(msg, at_sender=True)
         else:
             raise Exception('输入格式有误，指令格式：\n👉击杀 队伍码/用户名 职业')
+    except pydest.PydestException as err:
+        await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{e}',at_sender=True)
     except Exception as e:
         await session.send(f'{e}',at_sender=True)
 
@@ -756,7 +761,7 @@ async def Check_egg_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         msg = f'{args}\n【腐化卵🥚收集】\n'
         res = msg+Check_egg(info)
@@ -804,7 +809,7 @@ async def gambit_info(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900,1000])
+        info = await GetInfo(args,[900,1100])
         args = info['profile']['data']['userInfo']['displayName']
         res = get_gambit(info)
         head = f'{args}\n' + res+'#回复d2以查看其他功能'
@@ -839,7 +844,7 @@ async def Check_zengfu_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args，[900])
+        info = await GetInfo(args,[900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zengfu(info)
         head = f'{args}\n' + res + '#回复d2以查看其他功能'
@@ -1271,7 +1276,7 @@ async def Check_qianzhao_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
-classdict = {3655393761:'泰坦', 671679327:'猎人' ,2271682572:'术士'}
+classdict = {3655393761:'泰坦', 671679327:'猎人' ,2271682572:'术士','泰坦':3655393761,'猎人': 671679327 ,'术士':2271682572}
 def Check_DSC(info):
     msg = ''
     characterProgressions = info['characterProgressions']['data']
@@ -1304,6 +1309,8 @@ def Check_DSC(info):
     head += msg
     return head
 
+
+
 @ on_command('地窖', aliases=('深岩墓室'),only_to_me=False)
 async def Check_DSC_aync(session):
     try:
@@ -1312,17 +1319,40 @@ async def Check_DSC_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[200,900])
+        info = await GetInfo(args,[200,202,900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_DSC(info)
         head = f'{args}\n' + res
-        print(head)
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
+
+
+
+def Check_dianfeng(info,characterId):
+    msg = ''
+    info = info['characterProgressions']['data'][characterId]['milestones']
+    for i in 巅峰:
+        if 'name' not in 巅峰[i]:
+            # earned = info[i]['rewards'][0]['entries'][0]['earned']
+            icon = '⚪' if i in info else '✅'
+            name = 巅峰[i]
+            msg += f'{icon}{name}\n'
+        else:
+            icon = '⚪' if i in info else '✅'
+            # earned = info[i]['availableQuests'][0]['status']['completed']
+            name = 巅峰[i]['name']
+            msg += f'{icon}{name}\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【巅峰球查询】\n'
+    head += msg
+    return head
+
+
+
 @ on_command('巅峰', aliases=('巅峰球'),only_to_me=False)
-async def Check_DSC_aync(session):
+async def Check_dianfeng_aync(session):
     try:
         hardlink = gethardlink(session)
         if hardlink:
@@ -1330,14 +1360,68 @@ async def Check_DSC_aync(session):
         else:
             args = session.current_arg
         res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
-        if res1:
-            res = res1
-        else:
-            res = re.match(r'(.+) +(术士|猎人|泰坦)',args)
+        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)',args)
+
         if res:
             id = res.group(1)
-            classtype = res.group(2)
-            info = await GetInfo(id)
+            classtype = classdict[res.group(2)]
+            info = await GetInfo(id, [200, 202])
+            args = info['profile']['data']['userInfo']['displayName']
+            for characterId in info['characters']['data']:
+                if info['characters']['data'][characterId]['classHash'] == classtype:
+                    break
+            msg = Check_dianfeng(info,characterId)
+            head = f'{args}\n' + msg
+            await session.send(head, at_sender=True)
+        else:
+            raise Exception('\n❗指令格式错误啦\n👉巅峰 名/码 职业')
+    except Exception as e:
+        await session.send(f'{e}',at_sender=True)
+
+def get_zongshi_icon(num):
+    if num == 0:
+        return '⚪'
+    elif num <= 3:
+        return '✅'
+    elif num <= 6:
+        return '🎉'
+    else:
+        return '🙏'
+
+
+
+def Check_zongshi(info):
+    msg = ''
+    info = info['profileRecords']['data']['records']
+    for i in 宗师:
+        objectives = info[i]['objectives'][0]
+        progress = objectives['progress']
+        icon = get_zongshi_icon(progress)
+        name = 宗师[i]
+        msg += f'{icon}{name}：{progress}次\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【宗师查询】\n'
+    head += msg
+    return head
+
+
+@ on_command('宗师', only_to_me=False)
+async def Check_zongshi_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args,[900])
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_zongshi(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
 
 
 
@@ -1366,3 +1450,5 @@ async def Check_DSC_aync(session):
 #         await session.send(head, at_sender=True)
 #     except Exception as e:
 #         await session.send(f'获取失败，{e}', at_sender=True)
+
+

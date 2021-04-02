@@ -167,7 +167,7 @@ def get_msg(msg):
     dict_temp = {}
     if os.path.exists(file_all):  # 如果文件存在的话
         dict_temp = read_json(file_all)
-        if checkmsg in dict_temp:
+        if checkmsg in dict_temp and dict_temp[checkmsg]['type'] != '绑定' :
             print(dict_temp[checkmsg]['msg'])
             return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
         for i in dict_temp:
@@ -175,12 +175,12 @@ def get_msg(msg):
                 return get_msg_from_msgdict(dict_temp[i]['msg'])
     if os.path.exists(file_group):  # 如果文件存在的话
         dict_temp = read_json(file_group)
-        if checkmsg in dict_temp and dict_temp[checkmsg]['type'] == '自定义':
+        if checkmsg in dict_temp and dict_temp[checkmsg]['type'] != '绑定' :
             print(dict_temp[checkmsg]['msg'])
             return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
     if os.path.exists(file_user):  # 如果文件存在的话
         dict_temp = read_json(file_user)
-        if checkmsg in dict_temp and dict_temp[checkmsg]['type'] == '自定义':
+        if checkmsg in dict_temp and dict_temp[checkmsg]['type'] != '绑定' :
             return get_msg_from_msgdict(dict_temp[checkmsg]['msg'])
     return None
 
@@ -363,7 +363,7 @@ def tie_all(msg):
     else:
         dict_temp[question] = {'type': '绑定' , 'msg': answer}
         write_json(dict_temp, file)
-        return (f'全局绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧')
+        return (f'🎉全局绑定成功，{question}已被指定\n输入👉智谋 {question}👈试试吧')
         
 def tie_group(msg):
     raw_message = msg['raw_message']
@@ -384,7 +384,7 @@ def tie_group(msg):
     else:
         dict_temp[question] = {'type': '绑定' , 'msg': answer}
         write_json(dict_temp, file)
-        return (f'群组绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧\n❗该绑定仅在本群有效')
+        return (f'🎉群组绑定成功，{question}已被指定\n输入👉智谋 {question}👈试试吧\n❗该绑定仅在本群有效')
         
 def tie_user(msg):
     raw_message = msg['raw_message']
@@ -405,7 +405,7 @@ def tie_user(msg):
     else:
         dict_temp[question] = {'type': '绑定' , 'msg': answer}
         write_json(dict_temp, file)
-        return (f'个人绑定成功，🎉{question}已指定为特定玩家\n输入👉智谋 {question}👈试试吧\n❗该绑定仅对你有效')
+        return (f'🎉个人绑定成功，{question}已被指定\n输入👉智谋 {question}👈试试吧\n❗该绑定仅对你有效')
         
 def tie_urself(msg):
     raw_message = msg['raw_message']
@@ -426,6 +426,6 @@ def tie_urself(msg):
     else:
         dict_temp[question] = {'type': '绑定' , 'msg': answer}
         write_json(dict_temp, file)
-        return (f'已经为你绑定成功了，🎉以后你只需要输入指令头就可以查询你自己的战绩啦！\n输入👉智谋👈试试吧\n❗该绑定仅对你有效')
+        return (f'🎉绑定成功啦，以后你只需要输入指令头就可以查询自己的数据啦！\n输入👉智谋👈试试吧\n❗该绑定仅对你有效')
         
 
