@@ -20,14 +20,14 @@ sv = Service('群组')
 group_list = {}
 group_add = {}
 
-@on_notice('group_decrease')
-async def group_member_decrease(session:NoticeSession):
-    ev=session.event
-    user_id = ev.user_id
-    try:
-        await session.send(f'（{user_id}）走了...')
-    except:
-        pass
+# @on_notice('group_decrease')
+# async def group_member_decrease(session:NoticeSession):
+#     ev=session.event
+#     user_id = ev.user_id
+#     try:
+#         await session.send(f'（{user_id}）走了...')
+#     except:
+#         pass
 
 
 
@@ -68,7 +68,7 @@ async def handle_group_invite(session: RequestSession):
             group_info = await session.bot.get_group_info(group_id=ev.group_id,self_id=ev.self_id)
             group_name = group_info["group_name"]
         except Exception as err:
-            group_name = f'{err}'
+            group_name = f'[获取失败]'
         group_list[ev.group_id]={'flag': f'{ev.flag}',
                                 'sub_type': f'{ev.sub_type}',
                                 'group_name': f'{group_name}'
