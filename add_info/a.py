@@ -8,7 +8,7 @@ import random
 root = os.getcwd()
 root = os.path.join(root, 'res', 'destiny2', 'reply')
 user_root = os.path.join(root, 'user')
-group_root = os.path.join(root,  'group')
+group_root = os.path.join(root, 'group')
 
 
 def read_json(file):
@@ -67,7 +67,6 @@ def add_reply(msg):
     answer = answer.replace(r'\n', '\n')
     answer_res = re.match(r'.*\[CQ:image,file=(.+\.image)\].*', answer)
     # 返回的是f46784e63445c8b7b62e06bbca04d608.image
-    print('没问题')
     if answer_res:  # 如果存在图片
         file_name = answer_res.group(1)
         for i in message:
@@ -87,7 +86,7 @@ def add_reply(msg):
         dict_temp[question] = {'type': '自定义', 'msg': [answer]}
         length = 1
     write_json(dict_temp, file)
-    return(f'添加成功，当前问题下现在有[{length}]个回答')
+    return(f'🎉词库添加成功，当前问题下现在有[{length}]个回答')
 
 
 def add_all(msg):
@@ -109,7 +108,8 @@ def add_all(msg):
     question = res.group(1)
     # [CQ:image,file=f46784e63445c8b7b62e06bbca04d608.image]
     answer = res.group(2)
-
+    answer = answer.replace(r'\r', '\r')
+    answer = answer.replace(r'\n', '\n')
     if res.group(3) == '重定向':
         if answer in dict_temp:
             if 'alias' in dict_temp[answer]:
@@ -140,13 +140,11 @@ def add_all(msg):
         length = len(dict_temp[question]['msg'])
         dict_temp[question]['msg'].append(answer)
         length += 1
-        # answer需要换回去吗？？？
     else:
-        dict_temp[question] = {'type': 'perk' if 'perk' in res.group(
-            3) else '自定义', 'msg': [answer]}
+        dict_temp[question] = {'type': res.group(3), 'msg': [answer]}
         length = 1
     write_json(dict_temp, file)
-    return(f'添加成功，当前问题下现在有[{length}]个回答')
+    return(f'🎉全局词库添加成功，当前问题下现在有[{length}]个回答')
 
 
 def get_msg_from_msgdict(msg: list):
@@ -223,15 +221,15 @@ def lookup_group(msg):
             if dict_temp[i]['type'] == '绑定':
                 name = i
                 id = dict_temp[i]['msg']
-                绑定 += f'{name}:{id}\n'
+                绑定 += f'{name}:{id} | '
             else:
                 if 'CQ:image' in i:
                     问答 += '图片：'
                 else:
                     问答 += f'{i}：'
                 length = len(dict_temp[i]['msg'])
-                问答 += f'{length}条回答\n'
-        msg = f'\n【群组绑定】\n{绑定}【群组词库】\n{问答}'
+                问答 += f'{length}回答 | '
+        msg = f'\n【群组绑定】\n{绑定}\n【群组词库】\n{问答}'
         msg += '🎈个人词库/全局词库也可以看看哦'
         return msg
     raise Exception('该群还没有数据，请先尝试添加问答和绑定')
@@ -248,15 +246,15 @@ def lookup_all(msg):
             if dict_temp[i]['type'] == '绑定':
                 name = i
                 id = dict_temp[i]['msg']
-                绑定 += f'{name}:{id}\n'
+                绑定 += f'{name}:{id} | '
             else:
                 if 'CQ:image' in i:
                     问答 += '图片：'
                 else:
                     问答 += f'{i}：'
                 length = len(dict_temp[i]['msg'])
-                问答 += f'{length}条回答\n'
-        msg = f'\n【全局绑定】\n{绑定}【全局问答】\n{问答}'
+                问答 += f'{length}回答 | '
+        msg = f'\n【全局绑定】\n{绑定}\n【全局问答】\n{问答}'
         msg += '🎈个人词库/群组词库也可以看看哦'
         return msg
     raise Exception('全局还没有数据，请先尝试添加问答和绑定')

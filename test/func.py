@@ -1,5 +1,5 @@
 import os
-from nonebot import on_command
+from nonebot import on_command,CommandSession
 import aiohttp
 import asyncio
 import requests
@@ -13,7 +13,7 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC,巅峰,宗师
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC,巅峰,宗师,机灵,玉兔
 from data.tie import gethardlink
 from daily.report import getdailyreport
 
@@ -221,6 +221,8 @@ async def GetInfo(args,components=[]) -> dict:
     #TODO：在这里修复好检测玩家数据是不是隐私
     #TODO：添加玩家的绑定删除的消息提示
     #TODO：巅峰球查询有点简陋
+    #TODO：群内抽奖
+    #TODO：完成战绩查询的成败显示
     # if len(response['Response']['metrics']) == 1:
     #     raise Error_Privacy(args)
     response['Response']['membershipid'] = membershipid
@@ -540,6 +542,8 @@ async def Elo(session):
         await session.send(msg, at_sender=True)
     except TypeError:
         await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
+    except KeyError:
+        await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
     except Exception as e:
         await session.send(f'{e}', at_sender=True)
 
@@ -676,7 +680,7 @@ async def KillWeaponData(session):
             else:
                 weapon_len = len(kills_order)
             if len(kills_order) == 0:
-                await session.finish(f' {args} 查询失败，请尝试用队伍码查询')
+                raise Exception('❗连接Bungie服务器失败，请检查用户名/队伍码是否输入正确')
             for i in range(weapon_len):
                 weapon = kills_order[i][0]
                 kills = kills_order[i][1]['kills']
@@ -688,7 +692,7 @@ async def KillWeaponData(session):
                     icon_acc = '🎯'
                 msg += f'{icon_kills}{weapon}🔪{kills:^5}{icon_acc}{acc:>4}%\n'
             msg += f'🧨回复 d2 以查看其他功能{AppendInfo}'
-            await session.finish(msg, at_sender=True)
+            await session.send(msg, at_sender=True)
         else:
             raise Exception('❗指令格式错误啦\n👉击杀 码/名 职业')
     except pydest.PydestException as err:
@@ -1425,6 +1429,91 @@ async def Check_zongshi_aync(session):
 
 
 
+
+def Check_jiling(info):
+    msg = ''
+    notget = 0
+    info = info['profileProgression']['data']['checklists']['1856270404']
+    for i in 机灵:
+        if info[i] == False:
+            notget += 1
+            msg += 机灵[i]['name']
+            msg += '📍'+机灵[i]['location']+'\n'
+    msg += '🎉回复d2以查看其他功能'
+    if notget == 0:
+        head = '🎉你已经收集了全部10个📕机灵啦\n'
+    else:
+        head = f'🎐你还差{notget}个📕机灵没收集哦，下面是它们的位置：\n'
+    head += msg
+    return head
+
+
+@ on_command('机灵', aliases=('死去的机灵',), only_to_me=False)
+async def Check_jiling_aync(session:CommandSession):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args,[104])
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_jiling(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+def Check_yutu(info,characterId):
+    msg = ''
+    notget = 0
+    info = info['characterProgressions']['data'][characterId]['checklists']['1912364094']
+    for i in 玉兔:
+        if info[i] == False:
+            notget += 1
+            msg += 玉兔[i]['name']
+            msg += '📍'+玉兔[i]['location']+'\n'
+    if notget == 0:
+        head = '🎉你已经收集了全部9只🐇兔子啦\n'
+    else:
+        head = f'🎐你还差{notget}只🐇兔子没收集哦，下面是它们的位置：\n'
+    msg += '🎉回复d2以查看其他功能'
+    head += msg
+    return head
+
+
+
+@ on_command('兔子', aliases=('玉兔'),only_to_me=False)
+async def Check_yutu_aync(session:CommandSession):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
+        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)',args)
+
+        if res:
+            id = res.group(1)
+            classtype = classdict[res.group(2)]
+            info = await GetInfo(id, [200, 202])
+            args = info['profile']['data']['userInfo']['displayName']
+            for characterId in info['characters']['data']:
+                if info['characters']['data'][characterId]['classHash'] == classtype:
+                    break
+            msg = Check_yutu(info,characterId)
+            head = f'{args}\n' + msg
+            await session.send(head, at_sender=True)
+        else:
+            raise Exception('\n❗指令格式错误啦\n👉兔子 名/码 职业')
+    except Exception as e:
+        await session.send(f'{e}',at_sender=True)
+
+
+
+
+
 # def Check_rabbit(info):
 #     明日之眼 = info['profileCollectibles']['data']['collectibles']['753200559']['state']
 
@@ -1450,5 +1539,3 @@ async def Check_zongshi_aync(session):
 #         await session.send(head, at_sender=True)
 #     except Exception as e:
 #         await session.send(f'获取失败，{e}', at_sender=True)
-
-
