@@ -52,7 +52,7 @@ def add_reply(msg):
     res = re.match(
         r'添加(个人|群组).*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*', raw_message)
     if not res:
-        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+        raise Exception('格式错误，请输入词库帮助以查看相关教程')
     # 0是个人词库 1是群组词库
     file = os.path.join(user_root, f'{user_id}.json') if res.group(1) == '个人' else os.path.join(
         group_root, f'{group_id}.json')
@@ -100,7 +100,7 @@ def add_all(msg):
     res = re.match(
         r'添加全局.*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*', raw_message)
     if not res:
-        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+        raise Exception('格式错误，请输入词库帮助以查看相关教程')
     file = os.path.join(root, 'All.json')
     dict_temp = {}
     if os.path.exists(file):  # 如果文件存在的话
@@ -294,7 +294,7 @@ def del_reply(msg):
     file_user = os.path.join(user_root, f'{user_id}.json')
     res = re.match(r'删除(个人|群组).*[/【（(](.+)[/】）)].*', checkmsg)
     if not res:
-        raise Exception('删除格式错误，请输入绑定帮助以查看相关教程')
+        raise Exception('删除格式错误，请输入词库帮助以查看相关教程')
     path = file_user if res.group(1) == '个人' else file_group
     checkmsg = res.group(2)
     if os.path.exists(path):  # 如果文件存在的话
@@ -319,7 +319,7 @@ def del_all(msg):
     path = os.path.join(root, 'All.json')
     res = re.match(r'删除全局.*[/【（(](.+)[/】）)].*', checkmsg)
     if not res:
-        raise Exception('删除格式错误，请输入绑定帮助以查看相关教程')
+        raise Exception('删除格式错误，请输入词库帮助以查看相关教程')
     checkmsg = res.group(1)
     if os.path.exists(path):  # 如果文件存在的话
         dict_temp = read_json(path)

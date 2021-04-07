@@ -1,5 +1,5 @@
 import os
-from nonebot import on_command,CommandSession
+from nonebot import on_command, CommandSession
 import aiohttp
 import asyncio
 import requests
@@ -12,18 +12,17 @@ import datetime
 import hoshino
 import sys
 import re
+
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片,证章,赛季挑战,前兆,DSC,巅峰,宗师,机灵,玉兔
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔
 from data.tie import gethardlink
 from daily.report import getdailyreport
-
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
 API_KEY = '19a8efe4509a4570bee47bd9883f7d93'
 ROOT = 'https://www.bungie.net/Platform'
 
 destiny = pydest.Pydest(API_KEY)
-
 
 with open("record.json", 'r') as load_f:
     load_dict = json.load(load_f)
@@ -57,7 +56,6 @@ HELP_MSG = f'''目 前 可 公 开 的 情 报：
 📣小日向交流群827529117
 交流开发/提交问题/购买小日向'''
 
-
 sv = hoshino.Service('命运2', help_=HELP_MSG)
 
 
@@ -88,28 +86,23 @@ async def daily(bot, ev, only_to_me=False):
 
 @sv.on_fullmatch(('收费'))
 async def D2_say(bot, ev):
-    info = f'''⚪3月18日后，小日向1代将停止服务，届时只为付费的群组提供服务。
-⚪收费标准如下：
+    info = f'''⚪收费标准如下：
 6元/月 35/半年 60/年
 群人数≤20价格半价且后续不另收费
-如果需要购买请加QQ群827529117
-⚪承诺后续更新的内容：
-日报、周报、perk、试炼查询（周五前更新）
-地牢查询、PVE数据查询
-火力战队查询将具体到玩家进行的活动
-熔炉具体武器击杀查询（如：稳手、邪东等）
-❤感谢大家对小日向的支持'''
+如果需要购买请加QQ群827529117'''
     await bot.send(ev, info)
 
 
 class FailToGet(Exception):
     '''当输出有误时，抛出此异常'''
+
     # 自定义异常类型的初始化
 
     def __init__(self, value, msg):
         global Fail
         self.value = value
         self.msg = msg
+
     # 返回异常类对象的说明信息
 
     def __str__(self):
@@ -118,11 +111,13 @@ class FailToGet(Exception):
 
 class Error_Privacy(Exception):
     '''当输出有误时，抛出此异常'''
+
     # 自定义异常类型的初始化
 
     def __init__(self, value):
         self.value = value
         global Fail
+
     # 返回异常类对象的说明信息
 
     def __str__(self):
@@ -140,14 +135,14 @@ def get_success(result, name):
 async def GetMembershipidAndTypeFromSteam64(credential, crType='SteamId'):
     checklist = {3: 'steam', 2: 'psn', 1: 'xbl'}
     url = ROOT + \
-        f'/User/GetMembershipFromHardLinkedCredential/{crType}/{credential}'
+          f'/User/GetMembershipFromHardLinkedCredential/{crType}/{credential}'
     response = await destiny.api._get_request(url=url)
     if get_success(response, credential):
         dict = {}
         dict['membershipid'] = response['Response']['membershipId']
         dict['membershiptype_num'] = response['Response']['membershipType']
         dict['membershiptype_char'] = checklist[response['Response']
-                                                ['membershipType']]
+        ['membershipType']]
         return dict
     else:
         raise FailToGet(credential, f'无法找到该玩家信息，请检查是否输入了正确的队伍码/用户名')
@@ -162,12 +157,13 @@ async def GetMembershipidAndTypeFromSteamid(name):
             raise FailToGet(name, f'有{length}名玩家重名，请尝试用队伍码查询')
         else:
             if length != 0:
-                if length == 1 or (length == 2 and response['Response'][0]['membershipId'] == response['Response'][1]['membershipId']):
+                if length == 1 or (length == 2 and response['Response'][0]['membershipId'] == response['Response'][1][
+                    'membershipId']):
                     dict = {}
                     dict['membershipid'] = response['Response'][0]['membershipId']
                     dict['membershiptype_num'] = response['Response'][0]['membershipType']
                     dict['membershiptype_char'] = checklist[response['Response']
-                                                            [0]['membershipType']]
+                    [0]['membershipType']]
                     return dict
                 else:
                     raise FailToGet(name, f'有{length}名玩家重名，请尝试用队伍码查询')
@@ -209,7 +205,7 @@ async def test(session):
         return
 
 
-async def GetInfo(args,components=[]) -> dict:
+async def GetInfo(args, components=[]) -> dict:
     global count
     count += 1
     result = await GetMembershipidAndMembershiptype(args)
@@ -218,11 +214,16 @@ async def GetInfo(args,components=[]) -> dict:
     components.extend([100])
     response = await destiny.api.get_profile(membershiptype, membershipid, components)
     get_success(response, args)
-    #TODO：在这里修复好检测玩家数据是不是隐私
-    #TODO：添加玩家的绑定删除的消息提示
-    #TODO：巅峰球查询有点简陋
-    #TODO：群内抽奖
-    #TODO：完成战绩查询的成败显示
+    # TODO：在这里修复好检测玩家数据是不是隐私
+    # TODO：添加玩家的绑定删除的消息提示
+    # TODO：巅峰球查询有点简陋
+    # TODO：群内抽奖
+    # TODO：完成战绩查询的成败显示
+    # TODO：蛋/骨头过多自动撤回
+    # TODO：手机添加词库的时候插入图片比较困难
+    # TODO：优化词库查询的显示
+    # TODO：优化添加问答的正则表达式
+    # TODO：优化raid查询的keyerror
     # if len(response['Response']['metrics']) == 1:
     #     raise Error_Privacy(args)
     response['Response']['membershipid'] = membershipid
@@ -336,9 +337,9 @@ async def GetPlayerProfile(session):
             sherpaCount = i[1]['sherpaCount']
             time = get_time_text(i[1]['time'])
             if get_flawless(i, info):
-                head = f'💎【{raidname}】'
+                head = f'💎{raidname}'
             else:
-                head = f'⚪【{raidname}】'
+                head = f'⚪{raidname}'
             msg += \
                 f'''{head}🚀{time}
       🎐{full_clears:^3}/🎯{clears:^3}🎓{sherpaCount:^3}
@@ -349,7 +350,7 @@ async def GetPlayerProfile(session):
         await session.send(f'{err}', at_sender=True)
 
 
-@ on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
+@on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
 async def GetPlayerpvp(session):
     try:
         hardlink = gethardlink(session)
@@ -357,11 +358,11 @@ async def GetPlayerpvp(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900,1100])
+        info = await GetInfo(args, [900, 1100])
         record = info['profileRecords']['data']['records']
         metrics = info['metrics']['data']['metrics']
         args = info['profile']['data']['userInfo']['displayName']
-        
+
         kill = metrics['811894228']['objectiveProgress']['progress']
         reset = metrics['3626149776']['objectiveProgress']['progress']
         kda = int(metrics['871184140']['objectiveProgress']['progress']) / 100
@@ -401,11 +402,11 @@ def get_drop(now, localtime):
     elif temp.days >= 7:
         return str(round(temp.days / 7)) + '周前'
     elif temp.days >= 1:
-        return str(round(temp.days))+'天前'
+        return str(round(temp.days)) + '天前'
     elif temp.seconds >= 3600:
-        return str(round(temp.seconds/3600)) + '小时前'
+        return str(round(temp.seconds / 3600)) + '小时前'
     else:
-        return str(round(temp.seconds/60)) + '分钟前'
+        return str(round(temp.seconds / 60)) + '分钟前'
 
 
 def get_kda(times):
@@ -423,13 +424,13 @@ async def GetRaidReport(membershipid):
         clears_value = raid['clearsRank']['value']
         if 'subtier' in raid['clearsRank']:
             clears_rank = raid['clearsRank']['tier'] + \
-                ' ' + raid['clearsRank']['subtier']
+                          ' ' + raid['clearsRank']['subtier']
         else:
             clears_rank = raid['clearsRank']['tier']
         speed_value = raid['speedRank']['value']
         if 'subtier' in raid['speedRank']:
             speed_rank = raid['speedRank']['tier'] + \
-                ' ' + raid['speedRank']['subtier']
+                         ' ' + raid['speedRank']['subtier']
         else:
             speed_rank = raid['speedRank']['tier']
         if speed_value > 0:
@@ -459,7 +460,7 @@ async def d2_activity(session):
         for characterid in res['characters']['data']:
             json = await destiny.decode_hash(res['characters']['data'][characterid]['classHash'], 'DestinyClassDefinition')
             _class = json['displayProperties']['name']
-            re = await destiny.api.get_activity_history(res['profile']['data']['userInfo']['membershipType'], res['profile']['data']['userInfo']['membershipId'], characterid, count=5)
+            re = await destiny.api.get_activity_history(res['profile']['data']['userInfo']['membershipType'], res['profile']['data']['userInfo']['membershipId'], characterid, count=4)
             msg += '⚪' + _class + '⚪' + '\n'
             for times in re['Response']['activities']:
                 activityid = times['activityDetails']['directorActivityHash']
@@ -479,7 +480,7 @@ async def d2_activity(session):
         await session.send(f'{e}')
 
 
-@ sv.on_fullmatch(('状态查询'))
+@sv.on_fullmatch(('状态查询'))
 async def D2_condition(bot, ev):
     msg = f'调用次数：{count}'
     await bot.send(ev, msg)
@@ -530,10 +531,10 @@ async def Elo(session):
             # rank = round(100 - i['stats']['elo']['percentile'], 1)
             rank = i['stats']['elo']['percentile']
             if int(rank) <= 60:
-                rank = f'👇Rank:后{rank:<4}%'
+                rank = f'👇后{rank:<4}%'
             else:
                 rank = round(100 - rank, 1)
-                rank = f'👆Rank:前{rank:<4}%'
+                rank = f'👆前{rank:<4}%'
             kd = float(i['stats']['kd']['displayValue'])
             if kd > 10:
                 kd = round(kd, 1)
@@ -548,7 +549,7 @@ async def Elo(session):
         await session.send(f'{e}', at_sender=True)
 
 
-@ on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
+@on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
 async def getDataFireteam(session):
     try:
         hardlink = gethardlink(session)
@@ -556,7 +557,7 @@ async def getDataFireteam(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[1000])
+        info = await GetInfo(args, [1000])
         args = info['profile']['data']['userInfo']['displayName']
         if len(info['profileTransitoryData']) == 1:
             raise FailToGet(args, '玩家目前不在线')
@@ -577,7 +578,7 @@ async def getDataFireteam(session):
         await session.send(f'{e}', at_sender=True)
 
 
-@ on_command('保存数据', aliases=('保存'), only_to_me=False)
+@on_command('保存数据', aliases=('保存'), only_to_me=False)
 async def savedata_hand(session):
     savedata()
     await session.send('写入成功')
@@ -594,7 +595,7 @@ def get_icon_kills(num):
         return '⚪'
 
 
-@ on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
+@on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
 async def KillWeaponData(session):
     try:
         hardlink = gethardlink(session)
@@ -602,15 +603,15 @@ async def KillWeaponData(session):
             args = hardlink
         else:
             args = session.current_arg
-        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)', args)
         if res1:
             res = res1
         else:
-            res = re.match(r'(.+) +(术士|猎人|泰坦)',args)
+            res = re.match(r'(.+) +(术士|猎人|泰坦)', args)
         if res:
             id = res.group(1)
             classtype = res.group(2)
-            info = await GetInfo(id,[200])
+            info = await GetInfo(id, [200])
             args = info['profile']['data']['userInfo']['displayName']
             membershipid = info['membershipid']
             membershiptype = info['membershiptype_char']
@@ -621,7 +622,7 @@ async def KillWeaponData(session):
                 if classhash == info['characters']['data'][i]['classHash']:
                     characterid = info['characters']['data'][i]['characterId']
                     break
-            #args = info['profile']['data']['userInfo']['displayName']
+            # args = info['profile']['data']['userInfo']['displayName']
             url = f'https://api.tracker.gg/api/v2/destiny-2/standard/profile/{membershiptype}/{membershipid}/segments/detailedStat?characterId={characterid}&modeType=AllPvP'
             async with aiohttp.request("GET", url) as r:
                 # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
@@ -696,9 +697,9 @@ async def KillWeaponData(session):
         else:
             raise Exception('❗指令格式错误啦\n👉击杀 码/名 职业')
     except pydest.PydestException as err:
-        await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{err}',at_sender=True)
+        await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{err}', at_sender=True)
     except Exception as e:
-        await session.send(f'{e}',at_sender=True)
+        await session.send(f'{e}', at_sender=True)
 
 
 def Check_Penguin(info):
@@ -719,7 +720,7 @@ def Check_Penguin(info):
     return head
 
 
-@ on_command('企鹅查询', aliases=('企鹅', '🐧'), only_to_me=False)
+@on_command('企鹅查询', aliases=('企鹅', '🐧'), only_to_me=False)
 async def Check_Penguin_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -727,10 +728,10 @@ async def Check_Penguin_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         msg = f'{args}【企鹅收集】\n'
-        res = msg+Check_Penguin(info)
+        res = msg + Check_Penguin(info)
         await session.send(res, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
@@ -754,11 +755,11 @@ def Check_egg(info):
     else:
         head = f'🎐你还差{notget}颗🥚没收集哦，下面提供了它们的位置，快带着碎愿者冲吧！\n'
     head += msg
-    return head
+    return head, notget
 
 
-@ on_command('腐化卵查询', aliases=('孵化卵', '蛋', '卵', '🥚', '腐化卵'), only_to_me=False)
-async def Check_egg_aync(session):
+@on_command('腐化卵查询', aliases=('孵化卵', '蛋', '卵', '🥚', '腐化卵'), only_to_me=False)
+async def Check_egg_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
         if hardlink:
@@ -767,9 +768,17 @@ async def Check_egg_aync(session):
             args = session.current_arg
         info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
-        msg = f'{args}\n【腐化卵🥚收集】\n'
-        res = msg+Check_egg(info)
-        await session.send(res, at_sender=True)
+        res, notget = Check_egg(info)
+
+        message_id = await session.send(f'{args}\n{res}', at_sender=True)
+        message_id = message_id['message_id']
+        if notget > 15:
+            await asyncio.sleep(1)
+            await session.send('你的未收集物品过多，查询信息将在8秒内撤回，请复制保存。', at_sender=True)
+            await asyncio.sleep(8)
+            await session.bot.delete_msg(message_id=message_id, self_id=session.event.self_id)
+        else:
+            pass
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
@@ -805,7 +814,7 @@ def get_gambit(info):
     return msg
 
 
-@ on_command('智谋', aliases=('智谋查询', '千谋'), only_to_me=False)
+@on_command('智谋', aliases=('智谋查询', '千谋'), only_to_me=False)
 async def gambit_info(session):
     try:
         hardlink = gethardlink(session)
@@ -813,10 +822,10 @@ async def gambit_info(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900,1100])
+        info = await GetInfo(args, [900, 1100])
         args = info['profile']['data']['userInfo']['displayName']
         res = get_gambit(info)
-        head = f'{args}\n' + res+'#回复d2以查看其他功能'
+        head = f'{args}\n' + res + '#回复d2以查看其他功能'
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
@@ -829,8 +838,8 @@ def Check_zengfu(info):
     for key in info:
         if key['complete'] != True:
             notget += 1
-            msg += 增幅[str(key['objectiveHash'])]['name']+'📍' + \
-                增幅[str(key['objectiveHash'])]['location'] + '\n'
+            msg += 增幅[str(key['objectiveHash'])]['name'] + '📍' + \
+                   增幅[str(key['objectiveHash'])]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部8个地区的增幅✈啦，你就是木卫二的守护者！\n'
@@ -840,7 +849,7 @@ def Check_zengfu(info):
     return head
 
 
-@ on_command('增幅', aliases=(), only_to_me=False)
+@on_command('增幅', aliases=(), only_to_me=False)
 async def Check_zengfu_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -848,7 +857,7 @@ async def Check_zengfu_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900])
+        info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zengfu(info)
         head = f'{args}\n' + res + '#回复d2以查看其他功能'
@@ -856,15 +865,16 @@ async def Check_zengfu_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
+
 dungeondict = {
     1077850348: "预言",
-    1099555105: "冥冥低语:英雄",
+    # 1099555105: "冥冥低语:英雄",
     1375089621: "异端深渊",
     1738383283: "先知",
     2032534090: "破碎王座",
     2124066889: "前兆:普通",
     2582501063: "异端深渊",
-    2731208666: "行动时刻:英雄",
+    # 2731208666: "行动时刻:英雄",
     4148187374: "预言",
     4212753278: "前兆:大师"}
 
@@ -970,17 +980,17 @@ def Check_bones(info):
         if info[i] == False:
             notget += 1
             msg += bones[i]['name']
-            msg += '📍'+bones[i]['location']+'\n'
+            msg += '📍' + bones[i]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部16个阿罕卡拉遗骨🦴啦，你就是行遍幽梦之城的破咒者\n'
     else:
         head = f'🎐你还差{notget}个遗骨🦴没收集哦，顺便去看看这周上维挑战在哪嗷\n'
     head += msg
-    return head
+    return head, notget
 
 
-@ on_command('骨头', aliases=('🦴'), only_to_me=False)
+@on_command('骨头', aliases=('🦴'), only_to_me=False)
 async def Check_bones_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -988,11 +998,20 @@ async def Check_bones_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
-        res = Check_bones(info)
+        res, notget = Check_bones(info)
         head = f'{args}\n' + res
-        await session.send(head, at_sender=True)
+        message_id = await session.send(head, at_sender=True)
+        message_id = message_id['message_id']
+        if notget > 10:
+            await asyncio.sleep(1)
+            await session.send('你的未收集物品过多，查询信息将在10秒内撤回，请复制保存。', at_sender=True)
+            await asyncio.sleep(10)
+            await session.bot.delete_msg(message_id=message_id, self_id=session.event.self_id)
+        else:
+            pass
+
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
@@ -1003,10 +1022,9 @@ def Check_cats(info):
     info = info['profileProgression']['data']['checklists']['2726513366']
     for i in cats:
         if info[i] == False:
-
             notget += 1
             msg += cats[i]['name']
-            msg += '📍'+cats[i]['location']+'\n'
+            msg += '📍' + cats[i]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9只小猫🐱啦，九柱神向你表示感谢\n'
@@ -1016,7 +1034,7 @@ def Check_cats(info):
     return head
 
 
-@ on_command('猫', aliases=('🐱'), only_to_me=False)
+@on_command('猫', aliases=('🐱'), only_to_me=False)
 async def Check_cats_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1024,7 +1042,7 @@ async def Check_cats_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_cats(info)
         head = f'{args}\n' + res
@@ -1085,7 +1103,7 @@ def Check_chenghao(info):
     return head
 
 
-@ on_command('称号', only_to_me=False)
+@on_command('称号', only_to_me=False)
 async def Check_chenghao_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1093,7 +1111,7 @@ async def Check_chenghao_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900])
+        info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_chenghao(info)
         head = f'{args}\n' + res
@@ -1110,7 +1128,7 @@ def Check_exo(info):
         if info[i] == False:
             notget += 1
             msg += Exo[i]['name']
-            msg += '📍'+Exo[i]['location']+'\n'
+            msg += '📍' + Exo[i]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9只🐾死去的Exo啦\n'
@@ -1120,7 +1138,7 @@ def Check_exo(info):
     return head
 
 
-@ on_command('exo', aliases=('Exo', 'EXO'), only_to_me=False)
+@on_command('exo', aliases=('Exo', 'EXO'), only_to_me=False)
 async def Check_exo_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1128,7 +1146,7 @@ async def Check_exo_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_exo(info)
         head = f'{args}\n' + res
@@ -1145,7 +1163,7 @@ def Check_suipian(info):
         if info[i] == False:
             notget += 1
             msg += 暗熵碎片[i]['name']
-            msg += '📍'+暗熵碎片[i]['location']+'\n'
+            msg += '📍' + 暗熵碎片[i]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部9个🔷暗熵碎片啦\n'
@@ -1155,7 +1173,7 @@ def Check_suipian(info):
     return head
 
 
-@ on_command('碎片', aliases=('暗熵碎片','碎片查询','🧩'), only_to_me=False)
+@on_command('碎片', aliases=('暗熵碎片', '碎片查询', '🧩'), only_to_me=False)
 async def Check_suipian_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1163,7 +1181,7 @@ async def Check_suipian_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_suipian(info)
         head = f'{args}\n' + res
@@ -1188,7 +1206,7 @@ def Check_zhengzhang(info):
     return head
 
 
-@ on_command('证章', only_to_me=False)
+@on_command('证章', only_to_me=False)
 async def Check_zhengzhang_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1196,7 +1214,7 @@ async def Check_zhengzhang_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[700])
+        info = await GetInfo(args, [700])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zhengzhang(info)
         head = f'{args}\n' + res
@@ -1214,7 +1232,7 @@ def Check_saijitiaozhan(info):
         objectives = info[i]
         progressValue = objectives['progressValue']
         completionValue = objectives['completionValue']
-        icon = '✅' if completionValue == progressValue and completionValue != 0  else '⚪'
+        icon = '✅' if completionValue == progressValue and completionValue != 0 else '⚪'
         name = 赛季挑战[i]
         msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
     msg += '🎉回复d2以查看其他功能'
@@ -1223,7 +1241,7 @@ def Check_saijitiaozhan(info):
     return head
 
 
-@ on_command('赛季挑战', only_to_me=False)
+@on_command('赛季挑战', only_to_me=False)
 async def Check_saijitiaozhan_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1231,13 +1249,14 @@ async def Check_saijitiaozhan_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[700])
+        info = await GetInfo(args, [700])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_saijitiaozhan(info)
         head = f'{args}\n' + res
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
+
 
 def Check_qianzhao(info):
     msg = ''
@@ -1263,7 +1282,7 @@ def Check_qianzhao(info):
     return head
 
 
-@ on_command('前兆', only_to_me=False)
+@on_command('前兆', only_to_me=False)
 async def Check_qianzhao_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1271,7 +1290,7 @@ async def Check_qianzhao_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900])
+        info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_qianzhao(info)
         head = f'{args}\n' + res
@@ -1280,7 +1299,10 @@ async def Check_qianzhao_aync(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
-classdict = {3655393761:'泰坦', 671679327:'猎人' ,2271682572:'术士','泰坦':3655393761,'猎人': 671679327 ,'术士':2271682572}
+
+classdict = {3655393761: '泰坦', 671679327: '猎人', 2271682572: '术士', '泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
+
+
 def Check_DSC(info):
     msg = ''
     characterProgressions = info['characterProgressions']['data']
@@ -1288,34 +1310,33 @@ def Check_DSC(info):
     Record = info['profileRecords']['data']['records']
     职业 = ''
     职业msg = ''
-    关卡=['','','','']
+    关卡 = ['', '', '', '']
     for i in characterProgressions:
         characterName = classdict[characters[i]['classHash']]
         milestones = characterProgressions[i]['milestones']
-        msg+=f'{characterName}：'
+        msg += f'{characterName}：'
         if '541780856' in milestones:
             phases = milestones['541780856']['activities'][0]['phases']
             for j in range(4):
                 complete = phases[j]['complete']
-                msg+='✅' if complete == True else '⚪'
+                msg += '✅' if complete == True else '⚪'
         else:
             for j in range(4):
-                msg+='✅' 
-        msg+='\n'
+                msg += '✅'
+        msg += '\n'
 
     msg += '【挑战查询】\n'
     for i in DSC['挑战']:
         name = DSC['挑战'][i]
         icon = '✅' if Record[i]['objectives'][0]['complete'] == True else '⚪'
-        msg+=f'{icon}{name}\n'
+        msg += f'{icon}{name}\n'
     msg += '🎉回复d2以查看其他功能\n❗由于Bungie数据问题，只打尾王也算完成了全程'
     head = '【深岩墓室查询】\n'
     head += msg
     return head
 
 
-
-@ on_command('地窖', aliases=('深岩墓室'),only_to_me=False)
+@on_command('地窖', aliases=('深岩墓室'), only_to_me=False)
 async def Check_DSC_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1323,7 +1344,7 @@ async def Check_DSC_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[200,202,900])
+        info = await GetInfo(args, [200, 202, 900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_DSC(info)
         head = f'{args}\n' + res
@@ -1332,9 +1353,7 @@ async def Check_DSC_aync(session):
         await session.send(f'获取失败，{e}', at_sender=True)
 
 
-
-
-def Check_dianfeng(info,characterId):
+def Check_dianfeng(info, characterId):
     msg = ''
     info = info['characterProgressions']['data'][characterId]['milestones']
     for i in 巅峰:
@@ -1354,8 +1373,7 @@ def Check_dianfeng(info,characterId):
     return head
 
 
-
-@ on_command('巅峰', aliases=('巅峰球'),only_to_me=False)
+@on_command('巅峰', aliases=('巅峰球'), only_to_me=False)
 async def Check_dianfeng_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1363,8 +1381,8 @@ async def Check_dianfeng_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
-        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)',args)
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)', args)
+        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)', args)
 
         if res:
             id = res.group(1)
@@ -1374,13 +1392,14 @@ async def Check_dianfeng_aync(session):
             for characterId in info['characters']['data']:
                 if info['characters']['data'][characterId]['classHash'] == classtype:
                     break
-            msg = Check_dianfeng(info,characterId)
+            msg = Check_dianfeng(info, characterId)
             head = f'{args}\n' + msg
             await session.send(head, at_sender=True)
         else:
             raise Exception('\n❗指令格式错误啦\n👉巅峰 名/码 职业')
     except Exception as e:
-        await session.send(f'{e}',at_sender=True)
+        await session.send(f'{e}', at_sender=True)
+
 
 def get_zongshi_icon(num):
     if num == 0:
@@ -1391,7 +1410,6 @@ def get_zongshi_icon(num):
         return '🎉'
     else:
         return '🙏'
-
 
 
 def Check_zongshi(info):
@@ -1409,7 +1427,7 @@ def Check_zongshi(info):
     return head
 
 
-@ on_command('宗师', only_to_me=False)
+@on_command('宗师', only_to_me=False)
 async def Check_zongshi_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1417,17 +1435,13 @@ async def Check_zongshi_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900])
+        info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_zongshi(info)
         head = f'{args}\n' + res
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
-
-
-
-
 
 
 def Check_jiling(info):
@@ -1438,7 +1452,7 @@ def Check_jiling(info):
         if info[i] == False:
             notget += 1
             msg += 机灵[i]['name']
-            msg += '📍'+机灵[i]['location']+'\n'
+            msg += '📍' + 机灵[i]['location'] + '\n'
     msg += '🎉回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部10个📕机灵啦\n'
@@ -1448,15 +1462,15 @@ def Check_jiling(info):
     return head
 
 
-@ on_command('机灵', aliases=('死去的机灵',), only_to_me=False)
-async def Check_jiling_aync(session:CommandSession):
+@on_command('机灵', aliases=('死去的机灵',), only_to_me=False)
+async def Check_jiling_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[104])
+        info = await GetInfo(args, [104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_jiling(info)
         head = f'{args}\n' + res
@@ -1464,7 +1478,8 @@ async def Check_jiling_aync(session:CommandSession):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
-def Check_yutu(info,characterId):
+
+def Check_yutu(info, characterId):
     msg = ''
     notget = 0
     info = info['characterProgressions']['data'][characterId]['checklists']['1912364094']
@@ -1472,7 +1487,7 @@ def Check_yutu(info,characterId):
         if info[i] == False:
             notget += 1
             msg += 玉兔[i]['name']
-            msg += '📍'+玉兔[i]['location']+'\n'
+            msg += '📍' + 玉兔[i]['location'] + '\n'
     if notget == 0:
         head = '🎉你已经收集了全部9只🐇兔子啦\n'
     else:
@@ -1482,17 +1497,16 @@ def Check_yutu(info,characterId):
     return head
 
 
-
-@ on_command('兔子', aliases=('玉兔'),only_to_me=False)
-async def Check_yutu_aync(session:CommandSession):
+@on_command('兔子', aliases=('玉兔'), only_to_me=False)
+async def Check_yutu_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
         else:
             args = session.current_arg
-        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)',args)
-        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)',args)
+        res1 = re.match(r'(7656\d{13}) +(术士|猎人|泰坦)', args)
+        res = res1 if res1 else re.match(r'(.+) +(术士|猎人|泰坦)', args)
 
         if res:
             id = res.group(1)
@@ -1502,26 +1516,16 @@ async def Check_yutu_aync(session:CommandSession):
             for characterId in info['characters']['data']:
                 if info['characters']['data'][characterId]['classHash'] == classtype:
                     break
-            msg = Check_yutu(info,characterId)
+            msg = Check_yutu(info, characterId)
             head = f'{args}\n' + msg
             await session.send(head, at_sender=True)
         else:
             raise Exception('\n❗指令格式错误啦\n👉兔子 名/码 职业')
     except Exception as e:
-        await session.send(f'{e}',at_sender=True)
-
-
-
-
+        await session.send(f'{e}', at_sender=True)
 
 # def Check_rabbit(info):
 #     明日之眼 = info['profileCollectibles']['data']['collectibles']['753200559']['state']
-
-
-
-
-
-
 
 
 # @ on_command('突袭周常', only_to_me=False)

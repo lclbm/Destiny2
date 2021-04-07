@@ -53,9 +53,9 @@ async def group_member_add(session:NoticeSession):
     at=MessageSegment.at(user_id)
     try:
         if user_id == ev.self_id:
-            await session.send(f'大家好，我是由何志武223开发的小日向机器人，回复d2可以看看我有什么功能噢🤞')
+            await session.send(f'大家好，我是何志武223开发的小日向机器人，回复d2可以看看我有什么功能噢🤞')
         else:
-            await session.send(f'{at}，欢迎进群吼，我是群内的小日向机器人，回复d2可以看看我有什么功能噢🤞')
+            await session.send(f'{at}，欢迎噶点进群吼，我是群内的小日向机器人，回复d2可以看看我有什么功能噢🤞')
     except:
         pass
 
@@ -71,7 +71,8 @@ async def handle_group_invite(session: RequestSession):
             group_name = f'[获取失败]'
         group_list[ev.group_id]={'flag': f'{ev.flag}',
                                 'sub_type': f'{ev.sub_type}',
-                                'group_name': f'{group_name}'
+                                'group_name': f'{group_name}',
+                                'user_id':f'{ev.user_id}'
                                 }
         # comment = ev.comment
         length = len(group_list)
@@ -96,7 +97,7 @@ async def chuli(session: CommandSession):
         if ev.user_id != 614867321:
             raise Exception('只有管理员才有权限处理加群')
         if session.current_arg:
-            res = re.match(r'(\d+) *([01]) *(\w+)?', session.current_arg)
+            res = re.match(r'(\d+) *([01]) *(.+)?', session.current_arg)
             group_id = int(res.group(1))
             approve = True if int(res.group(2)) == 1 else False
             flag = group_list[group_id]['flag']
@@ -121,7 +122,7 @@ async def chuli(session: CommandSession):
                 group_name = value['group_name']
                 try:
                     await session.bot.set_group_add_request(flag=flag, sub_type=sub_type,approve=True)
-                    await session.send(f'✅群号：{key}\n✅群名：{group_name}')
+                    await session.send(f'已同意\n✅群号：{key}\n✅群名：{group_name}')
                 except:
                     await session.send(f'❗群号：{key}\n❗群名：{group_name}')
             group_list.clear()
@@ -139,31 +140,13 @@ async def chaxun(session: CommandSession):
         for key,value in group_list.items():
             group_name = value['group_name']
             sub_type = value['sub_type']
-            msg += f'👉{key}\n{group_name}\n'
+            user_id = value['user_id']
+            msg += f'👉{key}\n{group_name}\n邀请人：{user_id}\n'
             num += 1
         await session.send(message=f'{msg}处理加群 [群号] [01]')
     except Exception as e:
         await session.send(f'{e}')
 
-
-@sucmd('broadcast', aliases=('bc', '广播'))
-async def broadcast(session: CommandSession):
-    msg = session.current_arg
-    for sid in hoshino.get_self_ids():
-        gl = await session.bot.get_group_list(self_id=sid)
-        gl = [g['group_id'] for g in gl]
-        for g in gl:
-            await asyncio.sleep(1)
-            try:
-                await session.bot.send_group_msg(self_id=sid, group_id=g, message=msg)
-                hoshino.logger.info(f'群{g} 投递广播成功')
-            except Exception as e:
-                hoshino.logger.error(f'群{g} 投递广播失败：{type(e)}')
-                try:
-                    await session.send(f'群{g} 投递广播失败：{type(e)}')
-                except Exception as e:
-                    hoshino.logger.critical(f'向广播发起者进行错误回报时发生错误：{type(e)}')
-    await session.send(f'广播完成！')
 
 #
 #
