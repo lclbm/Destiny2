@@ -12,11 +12,10 @@ import datetime
 import hoshino
 import sys
 import re
-
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔
-from data.tie import gethardlink
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季
 from daily.report import getdailyreport
+from data.tie import gethardlink
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
 API_KEY = '19a8efe4509a4570bee47bd9883f7d93'
@@ -135,14 +134,14 @@ def get_success(result, name):
 async def GetMembershipidAndTypeFromSteam64(credential, crType='SteamId'):
     checklist = {3: 'steam', 2: 'psn', 1: 'xbl'}
     url = ROOT + \
-          f'/User/GetMembershipFromHardLinkedCredential/{crType}/{credential}'
+        f'/User/GetMembershipFromHardLinkedCredential/{crType}/{credential}'
     response = await destiny.api._get_request(url=url)
     if get_success(response, credential):
         dict = {}
         dict['membershipid'] = response['Response']['membershipId']
         dict['membershiptype_num'] = response['Response']['membershipType']
         dict['membershiptype_char'] = checklist[response['Response']
-        ['membershipType']]
+                                                ['membershipType']]
         return dict
     else:
         raise FailToGet(credential, f'无法找到该玩家信息，请检查是否输入了正确的队伍码/用户名')
@@ -158,12 +157,12 @@ async def GetMembershipidAndTypeFromSteamid(name):
         else:
             if length != 0:
                 if length == 1 or (length == 2 and response['Response'][0]['membershipId'] == response['Response'][1][
-                    'membershipId']):
+                        'membershipId']):
                     dict = {}
                     dict['membershipid'] = response['Response'][0]['membershipId']
                     dict['membershiptype_num'] = response['Response'][0]['membershipType']
                     dict['membershiptype_char'] = checklist[response['Response']
-                    [0]['membershipType']]
+                                                            [0]['membershipType']]
                     return dict
                 else:
                     raise FailToGet(name, f'有{length}名玩家重名，请尝试用队伍码查询')
@@ -266,7 +265,7 @@ async def GetPlayerProfile(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args,[900])
+        info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
         membershipid = info['profile']['data']['userInfo']['membershipId']
         url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
@@ -424,13 +423,13 @@ async def GetRaidReport(membershipid):
         clears_value = raid['clearsRank']['value']
         if 'subtier' in raid['clearsRank']:
             clears_rank = raid['clearsRank']['tier'] + \
-                          ' ' + raid['clearsRank']['subtier']
+                ' ' + raid['clearsRank']['subtier']
         else:
             clears_rank = raid['clearsRank']['tier']
         speed_value = raid['speedRank']['value']
         if 'subtier' in raid['speedRank']:
             speed_rank = raid['speedRank']['tier'] + \
-                         ' ' + raid['speedRank']['subtier']
+                ' ' + raid['speedRank']['subtier']
         else:
             speed_rank = raid['speedRank']['tier']
         if speed_value > 0:
@@ -454,7 +453,7 @@ async def d2_activity(session):
             args = hardlink
         else:
             args = session.current_arg
-        res = await GetInfo(args,[200])
+        res = await GetInfo(args, [200])
         args = res['profile']['data']['userInfo']['displayName']
         msg = args + '\n'
         for characterid in res['characters']['data']:
@@ -839,7 +838,7 @@ def Check_zengfu(info):
         if key['complete'] != True:
             notget += 1
             msg += 增幅[str(key['objectiveHash'])]['name'] + '📍' + \
-                   增幅[str(key['objectiveHash'])]['location'] + '\n'
+                增幅[str(key['objectiveHash'])]['location'] + '\n'
     msg += '#回复d2以查看其他功能'
     if notget == 0:
         head = '🎉你已经收集了全部8个地区的增幅✈啦，你就是木卫二的守护者！\n'
@@ -1300,7 +1299,8 @@ async def Check_qianzhao_aync(session):
         await session.send(f'获取失败，{e}', at_sender=True)
 
 
-classdict = {3655393761: '泰坦', 671679327: '猎人', 2271682572: '术士', '泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
+classdict = {3655393761: '泰坦', 671679327: '猎人', 2271682572: '术士',
+             '泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
 
 
 def Check_DSC(info):
@@ -1523,6 +1523,68 @@ async def Check_yutu_aync(session: CommandSession):
             raise Exception('\n❗指令格式错误啦\n👉兔子 名/码 职业')
     except Exception as e:
         await session.send(f'{e}', at_sender=True)
+
+
+def GetDaysPlayedTotal(minutes: int) -> str:
+    days = round(int(minutes)/60,1)
+    return f'{days}h'
+
+
+def Check_shengya(info):
+    msg = ''
+    character_msg = ''
+    seasons = info['profile']['data']['seasonHashes']
+    characters = info['characters']['data']
+    records = info['profileRecords']['data']
+    传承成就分 = "{:,}".format(records['legacyScore'])
+    当前成就分 = "{:,}".format(records['activeScore'])
+    熔炉胜场 = records['records']['3561485187']['intervalObjectives'][0]['progress']
+    智谋胜场 = records['records']['3561485187']['intervalObjectives'][0]['progress']
+    打击列表 = records['records']['2780814366']['objectives'][2]['progress']
+
+    season_msg = '年三：'
+    for season in 赛季['年三']:
+        if season in seasons:
+            season_msg += f'✅{赛季["年三"][season]}'
+        else:
+            season_msg += f'⚪{赛季["年三"][season]}'
+    season_msg += '\n年四：'
+    for season in 赛季['年四']:
+        if season in seasons:
+            season_msg += f'✅{赛季["年四"][season]}'
+        else:
+            season_msg += f'⚪{赛季["年四"][season]}'
+    for value in characters.values():
+        className = classdict[value['classHash']]
+        daysPlayedTotal = GetDaysPlayedTotal(value['minutesPlayedTotal'])
+        character_msg +=f'📕{className}：{daysPlayedTotal}\n'
+
+    msg = f'''
+{season_msg}
+🔷传承成就分：{传承成就分}
+🔷当前成就分：{当前成就分}
+{character_msg}
+熔炉胜场：{熔炉胜场}'''
+    msg += '🎉回复d2以查看其他功能'
+    return msg
+
+
+@on_command('生涯', aliases=('生涯查询', '角色查询'), only_to_me=False)
+async def Check_shengya_aync(session: CommandSession):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,900])
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_shengya(info)
+        head = f'{args}' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
 
 # def Check_rabbit(info):
 #     明日之眼 = info['profileCollectibles']['data']['collectibles']['753200559']['state']
