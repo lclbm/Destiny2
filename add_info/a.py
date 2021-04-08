@@ -237,6 +237,7 @@ def lookup_group(msg):
 
 def lookup_all(msg):
     path = os.path.join(root, f'All.json')
+    notShowList = ['perk']
     if os.path.exists(path):  # 如果文件存在的话
         dict_temp = read_json(path)
         msg = '全局问答和绑定数据如下：\n'
@@ -246,14 +247,16 @@ def lookup_all(msg):
             if dict_temp[i]['type'] == '绑定':
                 name = i
                 id = dict_temp[i]['msg']
-                绑定 += f'{name}:{id} | '
+                绑定 += f'{name} | '
             else:
+                if dict_temp[i]['type'] in notShowList:
+                    continue
                 if 'CQ:image' in i:
-                    问答 += '图片：'
+                    问答 += '[图片]:'
                 else:
-                    问答 += f'{i}：'
+                    问答 += f'{i}:'
                 length = len(dict_temp[i]['msg'])
-                问答 += f'{length}回答 | '
+                问答 += f'{length} | '
         msg = f'\n【全局绑定】\n{绑定}\n【全局问答】\n{问答}'
         msg += '\n🎈个人词库/群组词库也可以看看哦'
         return msg

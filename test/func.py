@@ -13,9 +13,10 @@ import hoshino
 import sys
 import re
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季
-from daily.report import getdailyreport
 from data.tie import gethardlink
+from daily.report import getdailyreport
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季
+
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
 API_KEY = '19a8efe4509a4570bee47bd9883f7d93'
@@ -481,7 +482,8 @@ async def d2_activity(session):
 
 @sv.on_fullmatch(('状态查询'))
 async def D2_condition(bot, ev):
-    msg = f'调用次数：{count}'
+    text = "{:,}".format(count)
+    msg = f'调用次数：{text}'
     await bot.send(ev, msg)
 
 
@@ -694,7 +696,7 @@ async def KillWeaponData(session):
             msg += f'🧨回复 d2 以查看其他功能{AppendInfo}'
             await session.send(msg, at_sender=True)
         else:
-            raise Exception('❗指令格式错误啦\n👉击杀 码/名 职业')
+            raise Exception('\n❗指令格式错误啦\n👉击杀 码/名 职业')
     except pydest.PydestException as err:
         await session.send(f'连接Bungie服务器失败，请检查用户名/队伍码是否输入正确\n{err}', at_sender=True)
     except Exception as e:
@@ -1526,7 +1528,7 @@ async def Check_yutu_aync(session: CommandSession):
 
 
 def GetDaysPlayedTotal(minutes: int) -> str:
-    days = round(int(minutes)/60,1)
+    days = round(int(minutes)/60, 1)
     return f'{days}h'
 
 
@@ -1539,7 +1541,9 @@ def Check_shengya(info):
     传承成就分 = "{:,}".format(records['legacyScore'])
     当前成就分 = "{:,}".format(records['activeScore'])
     熔炉胜场 = records['records']['3561485187']['intervalObjectives'][0]['progress']
-    智谋胜场 = records['records']['3561485187']['intervalObjectives'][0]['progress']
+    智谋胜场 = records['records']['1676011372']['objectives'][0]['progress'] + \
+        records['records']['2129704137']['objectives'][0]['progress'] + \
+        records['records']['89114360']['objectives'][0]['progress']
     打击列表 = records['records']['2780814366']['objectives'][2]['progress']
 
     season_msg = '年三：'
@@ -1557,14 +1561,16 @@ def Check_shengya(info):
     for value in characters.values():
         className = classdict[value['classHash']]
         daysPlayedTotal = GetDaysPlayedTotal(value['minutesPlayedTotal'])
-        character_msg +=f'📕{className}：{daysPlayedTotal}\n'
+        character_msg += f'📕{className}：{daysPlayedTotal}\n'
 
     msg = f'''
 {season_msg}
 🔷传承成就分：{传承成就分}
 🔷当前成就分：{当前成就分}
-{character_msg}
-熔炉胜场：{熔炉胜场}'''
+{character_msg}🏅熔炉胜场：{熔炉胜场}次
+🏅智谋胜场：{智谋胜场}次
+🏅打击列表：{打击列表}次
+'''
     msg += '🎉回复d2以查看其他功能'
     return msg
 
@@ -1577,7 +1583,7 @@ async def Check_shengya_aync(session: CommandSession):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args, [200,900])
+        info = await GetInfo(args, [200, 900])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_shengya(info)
         head = f'{args}' + res
