@@ -90,6 +90,26 @@ async def handle_group_invite(session: RequestSession):
                                         message=f'{at}\n👉收到1条群组请求\n❗异常：{e}\n群号：{ev.group_id}\n')
 
 
+@sucmd('quit', aliases=('退群',),force_private=False)
+async def quit_group(session: CommandSession):
+    args = session.current_arg_text.split()
+    failed = []
+    succ = []
+    for arg in args:
+        if not re.fullmatch(r'^\d+$', arg):
+            failed.append(arg)
+            continue
+        try:
+            await session.bot.set_group_leave(self_id=session.event.self_id, group_id=arg)
+            succ.append(arg)
+        except:
+            failed.append(arg)
+    msg = f'已尝试退出{len(succ)}个群'
+    if failed:
+        msg += f"\n失败{len(failed)}个群：{failed}"
+    await session.send(msg,at_sender=True)
+
+
 @sucmd('处理加群', force_private=False)
 async def chuli(session: CommandSession):
     try:
@@ -107,11 +127,11 @@ async def chuli(session: CommandSession):
             comment = res.group(3)
             try:
                 await session.bot.set_group_add_request(flag=flag, sub_type=sub_type, approve=approve,reason=comment)
+                at2 = MessageSegment.at(group_list[group_id]['user_id'])
                 if approve:
-                    await session.send(f'已同意\n✅群号：{group_id}\n✅群名：{group_name}')
+                    await session.send(f'{at2}已同意\n✅群号：{group_id}\n✅群名：{group_name}')
                 else:
-
-                    await session.send(f'已拒绝\n❌群号：{group_id}\n❌群名：{group_name}\n拒绝理由：{comment}')
+                    await session.send(f'{at2}已拒绝\n❌群号：{group_id}\n❌群名：{group_name}\n拒绝理由：{comment}')
             except:
                 await session.send(f'❗群号：{group_id}\n❗群名：{group_name}')
         else:
@@ -120,11 +140,12 @@ async def chuli(session: CommandSession):
                 flag = value['flag']
                 sub_type = value['sub_type']
                 group_name = value['group_name']
+                at2 = MessageSegment.at(value['user_id'])
                 try:
                     await session.bot.set_group_add_request(flag=flag, sub_type=sub_type,approve=True)
-                    await session.send(f'已同意\n✅群号：{key}\n✅群名：{group_name}')
+                    await session.send(f'{at2}已同意\n✅群号：{key}\n✅群名：{group_name}')
                 except:
-                    await session.send(f'❗群号：{key}\n❗群名：{group_name}')
+                    await session.send(f'{at2}处理失败❗群号：{key}\n❗群名：{group_name}')
             group_list.clear()
     except Exception as e:
         await session.send(f'{e}')

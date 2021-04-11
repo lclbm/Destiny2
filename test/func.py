@@ -10,12 +10,14 @@ from nonebot import *
 import json
 import datetime
 import hoshino
+from PIL import Image, ImageDraw, ImageFont
 import sys
 import re
+import time
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
 from data.tie import gethardlink
 from daily.report import getdailyreport
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季,线索
 
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
@@ -446,38 +448,38 @@ async def GetRaidReport(membershipid):
         raise FailToGet(membershipid, '获取队伍信息失败')
 
 
-@ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
-async def d2_activity(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        res = await GetInfo(args, [200])
-        args = res['profile']['data']['userInfo']['displayName']
-        msg = args + '\n'
-        for characterid in res['characters']['data']:
-            json = await destiny.decode_hash(res['characters']['data'][characterid]['classHash'], 'DestinyClassDefinition')
-            _class = json['displayProperties']['name']
-            re = await destiny.api.get_activity_history(res['profile']['data']['userInfo']['membershipType'], res['profile']['data']['userInfo']['membershipId'], characterid, count=4)
-            msg += '⚪' + _class + '⚪' + '\n'
-            for times in re['Response']['activities']:
-                activityid = times['activityDetails']['directorActivityHash']
-                utc = times['period']
-                UTC_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-                utcTime = datetime.datetime.strptime(utc, UTC_FORMAT)
-                localtime = utcTime + datetime.timedelta(hours=8)
-                now = datetime.datetime.now()
-                time = get_drop(now, localtime)
-                json = await destiny.decode_hash(activityid, 'DestinyActivityDefinition')
-                activity = json['displayProperties']['name']
-                msg += activity + ' ' + time + ' '
-                msg += 'KDA：' + get_kda(times) + '\n'
-        msg += f'#回复d2以查看其他功能{AppendInfo}'
-        await session.send(msg, at_sender=True)
-    except Exception as e:
-        await session.send(f'{e}')
+# @ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
+# async def d2_activity(session):
+#     try:
+#         hardlink = gethardlink(session)
+#         if hardlink:
+#             args = hardlink
+#         else:
+#             args = session.current_arg
+#         res = await GetInfo(args, [200])
+#         args = res['profile']['data']['userInfo']['displayName']
+#         msg = args + '\n'
+#         for characterid in res['characters']['data']:
+#             json = await destiny.decode_hash(res['characters']['data'][characterid]['classHash'], 'DestinyClassDefinition')
+#             _class = json['displayProperties']['name']
+#             re = await destiny.api.get_activity_history(res['profile']['data']['userInfo']['membershipType'], res['profile']['data']['userInfo']['membershipId'], characterid, count=4)
+#             msg += '⚪' + _class + '⚪' + '\n'
+#             for times in re['Response']['activities']:
+#                 activityid = times['activityDetails']['directorActivityHash']
+#                 utc = times['period']
+#                 UTC_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+#                 utcTime = datetime.datetime.strptime(utc, UTC_FORMAT)
+#                 localtime = utcTime + datetime.timedelta(hours=8)
+#                 now = datetime.datetime.now()
+#                 time = get_drop(now, localtime)
+#                 json = await destiny.decode_hash(activityid, 'DestinyActivityDefinition')
+#                 activity = json['displayProperties']['name']
+#                 msg += activity + ' ' + time + ' '
+#                 msg += 'KDA：' + get_kda(times) + '\n'
+#         msg += f'#回复d2以查看其他功能{AppendInfo}'
+#         await session.send(msg, at_sender=True)
+#     except Exception as e:
+#         await session.send(f'{e}')
 
 
 @sv.on_fullmatch(('状态查询'))
@@ -1261,22 +1263,30 @@ async def Check_saijitiaozhan_aync(session):
 
 def Check_qianzhao(info):
     msg = ''
-    info = info['profileRecords']['data']['records']
+    records = info['profileRecords']['data']['records']
+    格力康号线索 = info['profileProgression']['data']['checklists']['3975225462']
     for i in 前兆['碎片']:
-        objectives = info[i]['objectives'][0]
+        objectives = records[i]['objectives'][0]
         progressValue = objectives['progress']
         completionValue = objectives['completionValue']
         icon = '✅' if completionValue == progressValue else '⚪'
-        name = 前兆['碎片'][i]
+        name = 前兆['碎片'][i]['name']
         msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
+        if progressValue != completionValue:
+            entries = 前兆['碎片'][i]['entries']
+            for check in entries:
+                if not 格力康号线索[check]:
+                    msg +=f'{entries[check]["name"]}：{entries[check]["location"]}\n'
+
 
     for i in 前兆['成就']:
-        objectives = info[i]['intervalObjectives'][11]
+        objectives = records[i]['intervalObjectives'][11]
         progressValue = objectives['progress']
         completionValue = objectives['completionValue']
         icon = '✅' if completionValue == progressValue else '⚪'
         name = 前兆['成就'][i]
         msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
+
     msg += '🎉回复d2以查看其他功能'
     head = '【前兆查询】\n'
     head += msg
@@ -1291,7 +1301,7 @@ async def Check_qianzhao_aync(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args, [900])
+        info = await GetInfo(args, [900,104])
         args = info['profile']['data']['userInfo']['displayName']
         res = Check_qianzhao(info)
         head = f'{args}\n' + res
@@ -1592,6 +1602,10 @@ async def Check_shengya_aync(session: CommandSession):
         await session.send(f'获取失败，{e}', at_sender=True)
 
 
+
+
+
+
 # def Check_rabbit(info):
 #     明日之眼 = info['profileCollectibles']['data']['collectibles']['753200559']['state']
 
@@ -1611,3 +1625,105 @@ async def Check_shengya_aync(session: CommandSession):
 #         await session.send(head, at_sender=True)
 #     except Exception as e:
 #         await session.send(f'获取失败，{e}', at_sender=True)
+
+
+黑色 = '#000000'
+灰色 = '#818181'
+黑体 = ImageFont.truetype('simhei.ttf', size=20)
+标题 = ImageFont.truetype('font1559.ttf', size=30)
+标题2 = ImageFont.truetype('font1559.ttf', size=24)
+绿块 = Image.new('RGB', [67, 100], '#00b034')
+红块 = Image.new('RGB', [67, 100], (229, 115, 125))
+
+def get_activity_time(period):
+    UTC_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+    utcTime = datetime.datetime.strptime(period, UTC_FORMAT)
+    localtime = utcTime + datetime.timedelta(hours=8)
+    now = datetime.datetime.now()
+    temp = now - localtime
+    if temp.days >= 365:
+        return str(round(temp.days / 365)) + '年前'
+    elif temp.days >= 30:
+        return str(round(temp.days / 30)) + '月前'
+    elif temp.days >= 7:
+        return str(round(temp.days / 7)) + '周前'
+    elif temp.days >= 1:
+        return str(round(temp.days)) + '天前'
+    elif temp.seconds >= 3600:
+        return str(round(temp.seconds / 3600)) + '小时前'
+    else:
+        return str(round(temp.seconds / 60)) + '分钟前'
+
+
+@ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
+async def d2_activity(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        res = await GetInfo(args, [100,200])
+        args = res['profile']['data']['userInfo']['displayName']
+        msg = args + '\n'
+        
+        img_raw = Image.new('RGB', [900, 3000], 'White')
+        activityList = []
+        characters = res['characters']['data']
+        
+        characterIdList = list(characters.keys())
+        for characterId in characterIdList:
+            className = classdict[characters[characterId]['classHash']]
+            activities = await destiny.api.get_activity_history(res['membershiptype_num'], res['membershipid'], characterId, 30)
+            activities = activities['Response']['activities']
+            for i in activities:
+                i['characterId'] = characterId
+                i['className'] = className
+            activityList.extend(activities)
+        activityList_order = sorted(
+            activityList, key=lambda x: x['period'], reverse=True)
+        activityListToBeUsed = activityList_order[:30]
+        draw = ImageDraw.Draw(img_raw)
+        for i in range(30):
+            res = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
+            res2 = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['referenceId'], 'DestinyActivityDefinition')
+            模式 = res['displayProperties']['name']
+            名称 = res2['displayProperties']['name']
+            时间 = get_activity_time(activityListToBeUsed[i]['period'])
+            K = activityListToBeUsed[i]['values']['kills']['basic']['displayValue']
+            D = activityListToBeUsed[i]['values']['deaths']['basic']['displayValue']
+            A = activityListToBeUsed[i]['values']['assists']['basic']['displayValue']
+            进行时间 = activityListToBeUsed[i]['values']['activityDurationSeconds']['basic']['displayValue']
+            Score = activityListToBeUsed[i]['values']['score']['basic']['displayValue']
+
+            draw.text((86, 6+100*i), f'{模式}', font=标题, fill=黑色, direction=None)
+            draw.text((86, 70+100*i), f'{名称} · {时间}',
+                    font=黑体, fill=灰色, direction=None)
+            draw.text((468, 60+100*i), f'用时：{进行时间}',
+                    font=黑体, fill=黑色, direction=None)
+            draw.text((468, 30+100*i), f'{activityListToBeUsed[i]["className"]}',
+                    font=黑体, fill=黑色, direction=None)
+            draw.text((640, 20+100*i), 'K/D/A', font=标题2, fill=黑色, direction=None)
+            draw.text((640, 60+100*i), f'{K} / {D} / {A}',
+                    font=黑体, fill=黑色, direction=None)
+            draw.text((740, 20+100*i), 'Score', font=标题2, fill=黑色, direction=None)
+            draw.text((740, 60+100*i), f'{Score}',
+                    font=黑体, fill=黑色, direction=None)
+            if 'standing' in activityListToBeUsed[i]['values']:
+                if activityListToBeUsed[i]['values']['standing']['basic']['displayValue'] == 'Victory':
+                    img_raw.paste(绿块, (0, 0 + 100 * i))
+                else:
+                    img_raw.paste(红块, (0, 0 + 100 * i))
+            else:
+                if activityListToBeUsed[i]['values']['completed']['basic']['displayValue'] == 'Yes':
+                    img_raw.paste(绿块, (0, 0 + 100 * i))
+                else:
+                    img_raw.paste(红块, (0, 0 + 100 * i))
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res','destiny2','cache',f'{name}.png')
+        img_raw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        msg += f'{append}'
+        await session.send(msg, at_sender=True)
+    except Exception as e:
+        await session.send(f'{e}')

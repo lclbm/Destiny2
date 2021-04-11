@@ -86,7 +86,7 @@ def add_reply(msg):
         dict_temp[question] = {'type': '自定义', 'msg': [answer]}
         length = 1
     write_json(dict_temp, file)
-    return(f'🎉词库添加成功，当前问题下现在有[{length}]个回答')
+    return(f'🎉词库添加成功，当前问题下有[{length}]个回答')
 
 
 def add_all(msg):
@@ -144,7 +144,7 @@ def add_all(msg):
         dict_temp[question] = {'type': res.group(3), 'msg': [answer]}
         length = 1
     write_json(dict_temp, file)
-    return(f'🎉全局词库添加成功，当前问题下现在有[{length}]个回答')
+    return(f'🎉全局词库添加成功，当前问题下有[{length}]个回答')
 
 
 def get_msg_from_msgdict(msg: list):
