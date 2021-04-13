@@ -132,8 +132,8 @@ async def chuli(session: CommandSession):
                     await session.send(f'{at2}已同意\n✅群号：{group_id}\n✅群名：{group_name}')
                 else:
                     await session.send(f'{at2}已拒绝\n❌群号：{group_id}\n❌群名：{group_name}\n拒绝理由：{comment}')
-            except:
-                await session.send(f'❗群号：{group_id}\n❗群名：{group_name}')
+            except Exception as e:
+                await session.send(f'❗群号：{group_id}\n❗群名：{group_name}\n{e}')
         else:
             for key,value in group_list.items():
                 await asyncio.sleep(1)
@@ -144,8 +144,8 @@ async def chuli(session: CommandSession):
                 try:
                     await session.bot.set_group_add_request(flag=flag, sub_type=sub_type,approve=True)
                     await session.send(f'{at2}已同意\n✅群号：{key}\n✅群名：{group_name}')
-                except:
-                    await session.send(f'{at2}处理失败❗群号：{key}\n❗群名：{group_name}')
+                except Exception as e:
+                    await session.send(f'{at2}处理失败❗群号：{key}\n❗群名：{group_name}\n{e}')
             group_list.clear()
     except Exception as e:
         await session.send(f'{e}')
