@@ -53,9 +53,9 @@ async def group_member_add(session:NoticeSession):
     at=MessageSegment.at(user_id)
     try:
         if user_id == ev.self_id:
-            await session.send(f'大家好，我是何志武223开发的小日向机器人，回复d2可以看看我有什么功能噢🤞')
+            await session.send(f'米娜桑大家好，我是何志武223开发的小日向机器人，回复d2可以看看我有什么功能噢🤞')
         else:
-            await session.send(f'{at}，欢迎噶点进群吼，我是群内的小日向机器人，回复d2可以看看我有什么功能噢🤞')
+            await session.send(f'{at}，欢迎新噶点吼，我是群内的小日向机器人，回复d2可以看看我有什么功能噢🤞')
     except:
         pass
 
@@ -177,3 +177,14 @@ async def chaxun(session: CommandSession):
 #         await session.approve()
 #     else:
 #         await session.reject(reason='邀请入群请联系维护组')
+
+
+@on_notice('notify.poke')
+async def group_poke_me(session: NoticeSession):
+    ev = session.event
+    try:
+        if ev.target_id == ev.self_id:
+            msg = f'[CQ:poke,qq={ev.user_id}]'
+            await session.send(msg)
+    except:
+        pass

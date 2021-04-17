@@ -15,9 +15,10 @@ import sys
 import re
 import time
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索
-from daily.report import getdailyreport
 from data.tie import gethardlink
+from daily.report import getdailyreport
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索
+
 
 
 HEADERS = {"X-API-Key": '19a8efe4509a4570bee47bd9883f7d93'}
@@ -86,13 +87,13 @@ async def daily(bot, ev, only_to_me=False):
         await bot.send(ev, 'Bungie正在进行维护，服务器连接失败，日报更新可能需要延后')
 
 
-@sv.on_fullmatch(('收费'))
-async def D2_say(bot, ev):
-    info = f'''⚪收费标准如下：
-6元/月 35/半年 60/年
-群人数≤20价格半价且后续不另收费
-如果需要购买请加QQ群827529117'''
-    await bot.send(ev, info)
+# @sv.on_fullmatch(('收费'))
+# async def D2_say(bot, ev):
+#     info = f'''⚪收费标准如下：
+# 6元/月 35/半年 60/年
+# 群人数≤20价格半价且后续不另收费
+# 如果需要购买请加QQ群827529117'''
+#     await bot.send(ev, info)
 
 
 class FailToGet(Exception):
@@ -207,13 +208,14 @@ async def test(session):
         return
 
 
-async def GetInfo(args, components=[]) -> dict:
+async def GetInfo(args, components: list) -> dict:
+    components.extend([100])
+    print(components)
     global count
     count += 1
     result = await GetMembershipidAndMembershiptype(args)
     membershipid = result['membershipid']
     membershiptype = result['membershiptype_num']
-    components.extend([100])
     response = await destiny.api.get_profile(membershiptype, membershipid, components)
     get_success(response, args)
     # TODO：在这里修复好检测玩家数据是不是隐私
@@ -234,122 +236,96 @@ async def GetInfo(args, components=[]) -> dict:
     return response['Response']
 
 
-def get_time_text(secondes):
-    if secondes > 0:
-        m, s = divmod(secondes, 60)
-        h, m = divmod(m, 60)
-        if h == 0:
-            time = f'{m}m{s}s'
-        else:
-            time = f'{h}h{m}m{s}s'
-        return time
-    else:
-        return '0m0s'
-
-
-def get_flawless(i, info):
-    dict = {
-        '救赎花园': '1522774125',
-        '深岩墓室': '3560923614',
-        '往日之苦': '2925485370',
-        '最后一愿: 等级55': '380332968',
-        '忧愁王冠: 普通': '3292013042'}
-    if i[0] in dict.keys() and 'objectives' in info['profileRecords']['data']['records'][dict[i[0]]]:
-        return info['profileRecords']['data']['records'][dict[i[0]]]['objectives'][0]['complete']
-    else:
-        return False
-
-
-@ on_command('突袭', aliases=('raid', 'RAID', 'Raid'), only_to_me=False)
-async def GetPlayerProfile(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        info = await GetInfo(args, [900])
-        args = info['profile']['data']['userInfo']['displayName']
-        membershipid = info['profile']['data']['userInfo']['membershipId']
-        url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
-        async with aiohttp.request("GET", url) as r:
-            # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
-            response = await r.text(encoding="utf-8")
-        raid = json.loads(response)
-        raid = raid['response']
-        clears_value = raid['clearsRank']['value']
-        if 'subtier' in raid['clearsRank']:
-            clears_rank = raid['clearsRank']['tier'] + \
-                ' ' + raid['clearsRank']['subtier']
-        else:
-            clears_rank = raid['clearsRank']['tier']
-        speed_value = raid['speedRank']['value']
-        if 'subtier' in raid['speedRank']:
-            speed_rank = raid['speedRank']['tier'] + \
-                ' ' + raid['speedRank']['subtier']
-        else:
-            speed_rank = raid['speedRank']['tier']
-        time = get_time_text(speed_value)
-        msg = f'''{args}
-🎉【完成】{clears_value}次 📍{clears_rank}
-✨【时间】{time} 🚀{speed_rank}\n'''
-# 针对小日向做了较大的更新，输入 d2 返回菜单以查看更新
-# 如果数据异常请尝试用队伍码查询'''
-        raiddict = {}
-        for i in raid['activities']:
-            raidname = await destiny.decode_hash(i['activityHash'], 'DestinyActivityDefinition')
-            raidname = raidname['displayProperties']['name']
-            clears = i['values']['clears']
-            full_clears = i['values']['fullClears']
-            sherpaCount = i['values']['sherpaCount']
-            if 'fastestFullClear' in i['values']:
-                time = i['values']['fastestFullClear']['value']
-            else:
-                time = 0
-            if raidname in raiddict.keys():
-                raiddict[raidname]['clears'] += clears
-                raiddict[raidname]['full_clears'] += full_clears
-                raiddict[raidname]['sherpaCount'] += sherpaCount
-                if raiddict[raidname]['time'] > time:
-                    raiddict[raidname]['time'] = time
-            else:
-                raiddict[raidname] = {
-                    'clears': clears,
-                    'full_clears': full_clears,
-                    'sherpaCount': sherpaCount,
-                    'time': time}
-        raid_order = sorted(
-            raiddict.items(), key=lambda x: x[1]['clears'], reverse=True)
-        namedict = {
-            '世界吞噬者，利维坦: 巅峰': '世界吞噬者: 巅峰',
-            '世界吞噬者，利维坦: 普通': '世界吞噬者: 普通',
-            '忧愁王冠: 普通': '忧愁王冠',
-            '最后一愿: 等级55': '最后一愿',
-            '最后一愿: 普通': '最后一愿',
-            '利维坦，星之塔: 普通': '星之塔: 普通',
-            '利维坦，星之塔: 巅峰': '星之塔: 巅峰'
-        }
-        for i in raid_order:
-            raidname = i[0]
-            if raidname in namedict.keys():
-                raidname = namedict[raidname]
-            clears = i[1]['clears']
-            # 利维坦，星之塔: 普通
-            full_clears = i[1]['full_clears']
-            sherpaCount = i[1]['sherpaCount']
-            time = get_time_text(i[1]['time'])
-            if get_flawless(i, info):
-                head = f'💎{raidname}'
-            else:
-                head = f'⚪{raidname}'
-            msg += \
-                f'''{head}🚀{time}
-      🎐{full_clears:^3}/🎯{clears:^3}🎓{sherpaCount:^3}
-'''
-        msg += f'#回复d2以查看其他功能\n💎无暇🎐全程🎯通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
-        await session.send(msg, at_sender=True)
-    except Exception as err:
-        await session.send(f'{err}', at_sender=True)
+# @ on_command('突袭', aliases=('raid', 'RAID', 'Raid'), only_to_me=False)
+# async def GetPlayerProfile(session):
+#     try:
+#         hardlink = gethardlink(session)
+#         if hardlink:
+#             args = hardlink
+#         else:
+#             args = session.current_arg
+#         info = await GetInfo(args, [900])
+#         args = info['profile']['data']['userInfo']['displayName']
+#         membershipid = info['profile']['data']['userInfo']['membershipId']
+#         url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
+#         async with aiohttp.request("GET", url) as r:
+#             # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
+#             response = await r.text(encoding="utf-8")
+#         raid = json.loads(response)
+#         raid = raid['response']
+#         clears_value = raid['clearsRank']['value']
+#         if 'subtier' in raid['clearsRank']:
+#             clears_rank = raid['clearsRank']['tier'] + \
+#                 ' ' + raid['clearsRank']['subtier']
+#         else:
+#             clears_rank = raid['clearsRank']['tier']
+#         speed_value = raid['speedRank']['value']
+#         if 'subtier' in raid['speedRank']:
+#             speed_rank = raid['speedRank']['tier'] + \
+#                 ' ' + raid['speedRank']['subtier']
+#         else:
+#             speed_rank = raid['speedRank']['tier']
+#         time = get_time_text(speed_value)
+#         msg = f'''{args}
+# 🎉【完成】{clears_value}次 📍{clears_rank}
+# ✨【时间】{time} 🚀{speed_rank}\n'''
+# # 针对小日向做了较大的更新，输入 d2 返回菜单以查看更新
+# # 如果数据异常请尝试用队伍码查询'''
+#         raiddict = {}
+#         for i in raid['activities']:
+#             raidname = await destiny.decode_hash(i['activityHash'], 'DestinyActivityDefinition')
+#             raidname = raidname['displayProperties']['name']
+#             clears = i['values']['clears']
+#             full_clears = i['values']['fullClears']
+#             sherpaCount = i['values']['sherpaCount']
+#             if 'fastestFullClear' in i['values']:
+#                 time = i['values']['fastestFullClear']['value']
+#             else:
+#                 time = 0
+#             if raidname in raiddict.keys():
+#                 raiddict[raidname]['clears'] += clears
+#                 raiddict[raidname]['full_clears'] += full_clears
+#                 raiddict[raidname]['sherpaCount'] += sherpaCount
+#                 if raiddict[raidname]['time'] > time:
+#                     raiddict[raidname]['time'] = time
+#             else:
+#                 raiddict[raidname] = {
+#                     'clears': clears,
+#                     'full_clears': full_clears,
+#                     'sherpaCount': sherpaCount,
+#                     'time': time}
+#         raid_order = sorted(
+#             raiddict.items(), key=lambda x: x[1]['clears'], reverse=True)
+#         namedict = {
+#             '世界吞噬者，利维坦: 巅峰': '世界吞噬者: 巅峰',
+#             '世界吞噬者，利维坦: 普通': '世界吞噬者: 普通',
+#             '忧愁王冠: 普通': '忧愁王冠',
+#             '最后一愿: 等级55': '最后一愿',
+#             '最后一愿: 普通': '最后一愿',
+#             '利维坦，星之塔: 普通': '星之塔: 普通',
+#             '利维坦，星之塔: 巅峰': '星之塔: 巅峰'
+#         }
+#         for i in raid_order:
+#             raidname = i[0]
+#             if raidname in namedict.keys():
+#                 raidname = namedict[raidname]
+#             clears = i[1]['clears']
+#             # 利维坦，星之塔: 普通
+#             full_clears = i[1]['full_clears']
+#             sherpaCount = i[1]['sherpaCount']
+#             time = get_time_text(i[1]['time'])
+#             if get_flawless(i, info):
+#                 head = f'💎{raidname}'
+#             else:
+#                 head = f'⚪{raidname}'
+#             msg += \
+#                 f'''{head}🚀{time}
+#       🎐{full_clears:^3}/🎯{clears:^3}🎓{sherpaCount:^3}
+# '''
+#         msg += f'#回复d2以查看其他功能\n💎无暇🎐全程🎯通关🎓导师🚀最快{AppendInfo}\n❗王冠和往日无暇暂时无法查询'
+#         await session.send(msg, at_sender=True)
+#     except Exception as err:
+#         await session.send(f'{err}', at_sender=True)
 
 
 @on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
@@ -882,97 +858,97 @@ dungeondict = {
     4212753278: "前兆:大师"}
 
 
-@ on_command('地牢', aliases=('地牢查询'), only_to_me=False)
-async def Dungeon(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        info = await GetInfo(args)
-        args = info['profile']['data']['userInfo']['displayName']
-        membershipid = info['profile']['data']['userInfo']['membershipId']
-        url = f'https://bolskmfp72.execute-api.us-west-2.amazonaws.com/dungeon/api/player/{membershipid}'
-        async with aiohttp.request("GET", url) as r:
-            # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
-            response = await r.text(encoding="utf-8")
-        dungeon = json.loads(response)
-        dungeon = dungeon['response']
-        clears = dungeon['clearsRank']
-        clears_count = clears['value']
-        clear_rank = clears['tier'] + ' ' + \
-            clears['subtier'] if 'subtier' in clears else clears['tier']
-        speed = dungeon['speedRank']
-        speed_count = get_time_text(speed['value'])
-        speed_rank = speed['tier'] + ' ' + \
-            speed['subtier'] if 'subtier' in speed else speed['tier']
-        activities = dungeon['activities']
-        head = f'''{args}【地牢查询】
-🎉【完成】{clears_count}次 📍{clear_rank}
-✨【时间】{speed_count} 🚀{speed_rank}
-'''
-        record = {}
-        for i in activities:
-            hashid = i['activityHash']
-            dungeonname = dungeondict[hashid] if hashid in dungeondict else ''
-            if not dungeonname:
-                continue
-            entity = i['values']
-            if dungeonname in record:
-                record[dungeonname]['clears'] += entity['clears']
-                record[dungeonname]['fullClears'] += entity['fullClears']
-                record[dungeonname]['sherpaCount'] += entity['sherpaCount']
-                if 'fastestFullClear' in entity:
-                    record[dungeonname]['fastestFullClear'] = entity['fastestFullClear']['value'] if entity['fastestFullClear'][
-                        'value'] < record[dungeonname]['fastestFullClear'] else record[dungeonname]['fastestFullClear']
-                if 'flawlessDetails' in entity:
-                    least = 3
-                    for j in entity['flawlessActivities']:
-                        least = [least, j['accountCount']
-                                 ][j['accountCount'] < least]
-                    record[dungeonname]['flawlessDetails'] = least if least < record[dungeonname]['flawlessDetails'] or record[
-                        dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
-                if 'bestPlayerCountDetails' in entity:
-                    record[dungeonname]['bestPlayerCountDetails'] = entity['bestPlayerCountDetails']['accountCount'] if entity['bestPlayerCountDetails'][
-                        'accountCount'] < record[dungeonname]['bestPlayerCountDetails'] or record[dungeonname]['bestPlayerCountDetails'] == 0 else record[dungeonname]['bestPlayerCountDetails']
-            else:
-                clears = entity['clears']
-                fullClears = entity['fullClears']
-                sherpaCount = entity['sherpaCount']
-                fastestFullClear = entity['fastestFullClear']['value'] if 'fastestFullClear' in entity else 0
-                if 'flawlessActivities' in entity:
-                    least = 3
-                    for j in entity['flawlessActivities']:
-                        least = [least, j['accountCount']
-                                 ][j['accountCount'] < least]
-                    flawlessDetails = least
-                else:
-                    flawlessDetails = 0
-                bestPlayerCountDetails = entity['bestPlayerCountDetails'][
-                    'accountCount'] if 'bestPlayerCountDetails' in entity else 0
-                record[dungeonname] = {'clears': clears, 'fullClears': fullClears,
-                                       'sherpaCount': sherpaCount, 'fastestFullClear': fastestFullClear,
-                                       'flawlessDetails': flawlessDetails, 'bestPlayerCountDetails': bestPlayerCountDetails}
+# @ on_command('地牢', aliases=('地牢查询'), only_to_me=False)
+# async def Dungeon(session):
+#     try:
+#         hardlink = gethardlink(session)
+#         if hardlink:
+#             args = hardlink
+#         else:
+#             args = session.current_arg
+#         info = await GetInfo(args,[])
+#         args = info['profile']['data']['userInfo']['displayName']
+#         membershipid = info['profile']['data']['userInfo']['membershipId']
+#         url = f'https://bolskmfp72.execute-api.us-west-2.amazonaws.com/dungeon/api/player/{membershipid}'
+#         async with aiohttp.request("GET", url) as r:
+#             # 或者直接await r.read()不编码，直接读取，适合于图像等无法编码文件
+#             response = await r.text(encoding="utf-8")
+#         dungeon = json.loads(response)
+#         dungeon = dungeon['response']
+#         clears = dungeon['clearsRank']
+#         clears_count = clears['value']
+#         clear_rank = clears['tier'] + ' ' + \
+#             clears['subtier'] if 'subtier' in clears else clears['tier']
+#         speed = dungeon['speedRank']
+#         speed_count = get_time_text(speed['value'])
+#         speed_rank = speed['tier'] + ' ' + \
+#             speed['subtier'] if 'subtier' in speed else speed['tier']
+#         activities = dungeon['activities']
+#         head = f'''{args}【地牢查询】
+# 🎉【完成】{clears_count}次 📍{clear_rank}
+# ✨【时间】{speed_count} 🚀{speed_rank}
+# '''
+#         record = {}
+#         for i in activities:
+#             hashid = i['activityHash']
+#             dungeonname = dungeondict[hashid] if hashid in dungeondict else ''
+#             if not dungeonname:
+#                 continue
+#             entity = i['values']
+#             if dungeonname in record:
+#                 record[dungeonname]['clears'] += entity['clears']
+#                 record[dungeonname]['fullClears'] += entity['fullClears']
+#                 record[dungeonname]['sherpaCount'] += entity['sherpaCount']
+#                 if 'fastestFullClear' in entity:
+#                     record[dungeonname]['fastestFullClear'] = entity['fastestFullClear']['value'] if entity['fastestFullClear'][
+#                         'value'] < record[dungeonname]['fastestFullClear'] else record[dungeonname]['fastestFullClear']
+#                 if 'flawlessDetails' in entity:
+#                     least = 3
+#                     for j in entity['flawlessActivities']:
+#                         least = [least, j['accountCount']
+#                                  ][j['accountCount'] < least]
+#                     record[dungeonname]['flawlessDetails'] = least if least < record[dungeonname]['flawlessDetails'] or record[
+#                         dungeonname]['flawlessDetails'] == 0 else record[dungeonname]['flawlessDetails']
+#                 if 'bestPlayerCountDetails' in entity:
+#                     record[dungeonname]['bestPlayerCountDetails'] = entity['bestPlayerCountDetails']['accountCount'] if entity['bestPlayerCountDetails'][
+#                         'accountCount'] < record[dungeonname]['bestPlayerCountDetails'] or record[dungeonname]['bestPlayerCountDetails'] == 0 else record[dungeonname]['bestPlayerCountDetails']
+#             else:
+#                 clears = entity['clears']
+#                 fullClears = entity['fullClears']
+#                 sherpaCount = entity['sherpaCount']
+#                 fastestFullClear = entity['fastestFullClear']['value'] if 'fastestFullClear' in entity else 0
+#                 if 'flawlessActivities' in entity:
+#                     least = 3
+#                     for j in entity['flawlessActivities']:
+#                         least = [least, j['accountCount']
+#                                  ][j['accountCount'] < least]
+#                     flawlessDetails = least
+#                 else:
+#                     flawlessDetails = 0
+#                 bestPlayerCountDetails = entity['bestPlayerCountDetails'][
+#                     'accountCount'] if 'bestPlayerCountDetails' in entity else 0
+#                 record[dungeonname] = {'clears': clears, 'fullClears': fullClears,
+#                                        'sherpaCount': sherpaCount, 'fastestFullClear': fastestFullClear,
+#                                        'flawlessDetails': flawlessDetails, 'bestPlayerCountDetails': bestPlayerCountDetails}
 
-        # 归类完成
-        dungeon_order = sorted(
-            record.items(), key=lambda x: x[1]['clears'], reverse=True)
-        for i in dungeon_order:
-            dungeonname = i[0]
-            singledict = i[1]
-            clears = singledict['clears']
-            fullClears = singledict['fullClears']
-            sherpaCount = singledict['sherpaCount']
-            fastestFullClear = get_time_text(singledict['fastestFullClear'])
-            icon1 = '💎'if singledict['flawlessDetails'] == 1 else '⚪'
-            icon2 = '🎉' if singledict['bestPlayerCountDetails'] == 1 else '⚪'
-            head += f'''{icon1}{icon2}『{dungeonname}』🚀{fastestFullClear}
-        🎯{fullClears:<3}/✅{clears:<3} 🎓{sherpaCount:<2}\n'''
-        head += '💎单人无暇 🎉单人\n🚀回复d2以查看其他功能'
-        await session.send(head, at_sender=True)
-    except Exception as e:
-        await session.send(f'获取失败，{e}', at_sender=True)
+#         # 归类完成
+#         dungeon_order = sorted(
+#             record.items(), key=lambda x: x[1]['clears'], reverse=True)
+#         for i in dungeon_order:
+#             dungeonname = i[0]
+#             singledict = i[1]
+#             clears = singledict['clears']
+#             fullClears = singledict['fullClears']
+#             sherpaCount = singledict['sherpaCount']
+#             fastestFullClear = get_time_text(singledict['fastestFullClear'])
+#             icon1 = '💎'if singledict['flawlessDetails'] == 1 else '⚪'
+#             icon2 = '🎉' if singledict['bestPlayerCountDetails'] == 1 else '⚪'
+#             head += f'''{icon1}{icon2}『{dungeonname}』🚀{fastestFullClear}
+#         🎯{fullClears:<3}/✅{clears:<3} 🎓{sherpaCount:<2}\n'''
+#         head += '💎单人无暇 🎉单人\n🚀回复d2以查看其他功能'
+#         await session.send(head, at_sender=True)
+#     except Exception as e:
+#         await session.send(f'获取失败，{e}', at_sender=True)
 
 
 def Check_bones(info):
@@ -1080,7 +1056,7 @@ async def Check_cats_aync(session):
 #             args = hardlink
 #         else:
 #             args = session.current_arg
-#         info = await GetInfo(args)
+#         info = await GetInfo(args,[])
 #         args = info['profile']['data']['userInfo']['displayName']
 #         res = Check_chenghao(info)
 #         head = f'{args}\n' + res
@@ -1613,7 +1589,7 @@ async def Check_shengya_aync(session: CommandSession):
 #             args = hardlink
 #         else:
 #             args = session.current_arg
-#         info = await GetInfo(args)
+#         info = await GetInfo(args,[])
 #         args = info['profile']['data']['userInfo']['displayName']
 #         res = Check_weeklyraid(info)
 #         head = f'{args}\n' + res
@@ -1692,7 +1668,8 @@ async def d2_activity(session):
             进行时间 = activityListToBeUsed[i]['values']['activityDurationSeconds']['basic']['displayValue']
             Score = activityListToBeUsed[i]['values']['score']['basic']['displayValue']
 
-            draw.text((86, 6+100*i), f'{模式}', font=活动标题, fill=黑色, direction=None)
+            draw.text((86, 6+100*i), f'{模式}',
+                      font=活动标题, fill=黑色, direction=None)
             draw.text((86, 70+100*i), f'{名称} · {时间}',
                       font=黑体, fill=灰色, direction=None)
             draw.text((468, 60+100*i), f'用时：{进行时间}',
@@ -1701,7 +1678,7 @@ async def d2_activity(session):
                       font=黑体, fill=黑色, direction=None)
             draw.text((640, 20+100*i), 'K/D/A',
                       font=标题2, fill=黑色, direction=None)
-            draw.text((640, 60+100*i), f'{K} / {D} / {A}',
+            draw.text((640, 60+100*i), f'{K}/{D}/{A}',
                       font=黑体, fill=黑色, direction=None)
             draw.text((740, 20+100*i), 'Score',
                       font=标题2, fill=黑色, direction=None)
@@ -1751,8 +1728,11 @@ async def GetEloDict(membershiptype, membershipid):
         Elo颜色 = eval(i['stats']['elo']['metadata']['rankColor']
                      ['value'].replace('rgb(', '').replace(')', ''))
         Elo分 = i['stats']['elo']['displayValue']
-        Elo排名 = i['stats']['elo']['rank']
-        Elo排名百分比 = i['stats']['elo']['percentile']
+        if not (Elo排名 := i['stats']['elo']['rank']):
+            Elo排名 = 999999
+
+        if not (Elo排名百分比 := i['stats']['elo']['percentile']):
+            Elo排名百分比 = 0
         Elo段位 = i['stats']['elo']['metadata']['rankName'].replace('Diamond', '钻石').replace(
             'Platinum', '白金').replace('Gold', '黄金').replace('Silver', '白银').replace('Bronze', '青铜')
         Elo段位名称 = Elo段位[:2]
@@ -1785,8 +1765,6 @@ async def GetEloDict(membershiptype, membershipid):
     return eloDict
 
 
-
-
 标题 = ImageFont.truetype('思源黑体B.otf', size=20)
 模式 = ImageFont.truetype('思源黑体B.otf', size=26)
 描述文本 = ImageFont.truetype('数字字体.ttf', size=20)
@@ -1809,7 +1787,7 @@ async def Elo(session):
             args = hardlink
         else:
             args = session.current_arg
-        info = await GetInfo(args)
+        info = await GetInfo(args, [])
         args = info['profile']['data']['userInfo']['displayName']
         membershiptype = info['profile']['data']['userInfo']['membershipType']
         membershipid = info['profile']['data']['userInfo']['membershipId']
@@ -1818,8 +1796,9 @@ async def Elo(session):
         img_elo = Image.new('RGB', [1050, 100+eloDictLength*80], '#303030')
         draw = ImageDraw.Draw(img_elo)
         标题块 = Image.new('RGB', [1200, 40], '#3D3D3D')
-        img_elo.paste(标题块,(0, 60))
-        draw.text((50, 20), f'Elo查询：{args}', font=模式, fill=标题文字, direction=None)
+        img_elo.paste(标题块, (0, 60))
+        draw.text((50, 20), f'Elo查询：{args}',
+                  font=模式, fill=标题文字, direction=None)
         draw.text((60, 70), f'模式/段位', font=标题, fill=标题文字, direction=None)
         draw.text((300, 70), f'排名', font=标题, fill=标题文字, direction=None)
         draw.text((550, 70), f'K/D', font=标题, fill=标题文字, direction=None)
@@ -1855,9 +1834,9 @@ async def Elo(session):
             img_elo.paste(段位图片, (60, 105+80*i))
 
             draw.text((135, 130+80*i), f'{模式名称}',
-                    font=模式, fill='white', direction=None)
+                      font=模式, fill='white', direction=None)
             draw.text((200, 135+80*i), f'{Elo段位}',
-                    font=段位, fill=Elo颜色, direction=None)
+                      font=段位, fill=Elo颜色, direction=None)
             灰高 = int((100 - Elo排名百分比) * 0.6)
             白高 = 60-灰高
             Rating灰 = Image.new('RGB', [10, 灰高], 排行灰色)
@@ -1865,16 +1844,16 @@ async def Elo(session):
             img_elo.paste(Rating灰, (300, 110+80*i))
             img_elo.paste(Rating白, (300, 110 + 灰高+80*i))
             draw.text((320, 115 + 80 * i), f'{Elo分数}',
-                    font=Elo分, fill='white', direction=None)
+                      font=Elo分, fill='white', direction=None)
             if Elo排名百分比 >= 70:
-                temp = round(100-Elo排名百分比,1)
+                temp = round(100-Elo排名百分比, 1)
                 Elo排名描述性 = f'Top {temp}%'
-                
+
             else:
                 Elo排名描述性 = f'Bottom {Elo排名百分比}%'
-            
+
             draw.text((320, 145+80*i), f'#{Elo排名} • {Elo排名描述性}',
-                    font=描述文本, fill='#FCD401' if Elo排名百分比>= 90 else '#C3C3C3', direction=None)
+                      font=描述文本, fill='#FCD401' if Elo排名百分比 >= 90 else '#C3C3C3', direction=None)
             绿色 = '#3D8D4D'
             红色 = '#8F2020'
             KandD = K + D
@@ -1888,9 +1867,9 @@ async def Elo(session):
             img_elo.paste(KD_K, (550, 150+80*i))
             img_elo.paste(KD_D, (550 + K长度, 150+80*i))
             draw.text((550, 115+80*i), f'{KD}',
-                    font=Elo分, fill='white', direction=None)
+                      font=Elo分, fill='white', direction=None)
             draw.text((630, 120+80*i), f'({K} - {D})',
-                    font=描述文本, fill='#C3C3C3', direction=None)
+                      font=描述文本, fill='#C3C3C3', direction=None)
             WandL = 胜利+失败
             try:
                 W长度 = int(200 * 胜利 / WandL)
@@ -1902,10 +1881,10 @@ async def Elo(session):
             img_elo.paste(WL_W, (800, 150+80*i))
             img_elo.paste(WL_L, (800 + W长度, 150+80*i))
             draw.text((800, 115+80*i), f'{胜率}%',
-                    font=Elo分, fill='white', direction=None)
+                      font=Elo分, fill='white', direction=None)
             draw.text((860, 120+80*i), f'({胜利} - {失败})',
-                    font=描述文本, fill='#C3C3C3', direction=None)
-        
+                      font=描述文本, fill='#C3C3C3', direction=None)
+
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'elo_{name}.png')
@@ -1917,3 +1896,646 @@ async def Elo(session):
         await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
     except Exception as e:
         await session.send(f'{e}', at_sender=True)
+
+
+RAID_LIST = ['深岩墓室', '救赎花园', '最后一愿', '忧愁王冠', '往日之苦', '星之塔：巅峰',
+             '利维坦：巅峰', '世界吞噬者：巅峰', '星之塔：普通', '世界吞噬者：普通', '利维坦：普通']
+FLAWLESS_DICT = {
+    6: 'Flawless',
+    5: 'Flawless',
+    4: 'Flawless',
+    3: 'Flawless Trio',
+    2: 'Flawless Duo',
+    1: 'Flawless Solo'}
+LOWMAN_DICT = {
+    3: 'Trio',
+    2: 'Duo',
+    1: 'Solo'}
+
+TAG_COLOR_DICT = {
+    'Flawless': '#31b573',
+    'Flawless Trio': '#FA576F',
+    'Flawless Duo':'#FA576F',
+    'Flawless Solo':'#FA576F',
+    'Trio':'#f4b757',
+    'Duo':'#f4b757',
+    'Solo':'#00709e',
+
+}
+
+
+RAID_NAEM_DICT = {
+    '深岩墓室': '深岩墓室',
+    '最后一愿: 等级55': '最后一愿',
+    '最后一愿: 普通': '最后一愿',
+    '救赎花园': '救赎花园',
+    '往日之苦': '往日之苦',
+    '忧愁王冠: 普通': '忧愁王冠',
+    '利维坦: 巅峰': '利维坦：巅峰',
+    '利维坦: 普通': '利维坦：普通',
+    '利维坦，星之塔: 普通': '星之塔：普通',
+    '利维坦，星之塔: 巅峰': '星之塔：巅峰',
+    '世界吞噬者，利维坦: 巅峰': '世界吞噬者：巅峰',
+    '世界吞噬者，利维坦: 普通': '世界吞噬者：普通',
+    '世界吞噬者，利维坦': '世界吞噬者：普通',
+    '利维坦': '利维坦：普通'}
+
+
+def get_Activities_lowest_accountCount(Activities: list) -> int:
+    accountCount = 6
+    for j in Activities:
+        accountCount = [accountCount, j['accountCount']
+                        ][j['accountCount'] < accountCount]
+    return accountCount
+
+
+async def add_raid_data_dict(all_raid_data_dict: dict, single_raid_data_dict: dict):
+    activity_hash = single_raid_data_dict['activityHash']
+    activity_name_info = await destiny.decode_hash(activity_hash, 'DestinyActivityDefinition')
+    activity_name = RAID_NAEM_DICT[activity_name_info['displayProperties']['name']]
+
+    data_values = single_raid_data_dict['values']
+    if activity_name in all_raid_data_dict:
+        raid_now_dict = all_raid_data_dict[activity_name]
+        raid_now_dict['clears'] += data_values['clears']
+        raid_now_dict['fullClears'] += data_values['fullClears']
+        raid_now_dict['sherpaCount'] += data_values['sherpaCount']
+        if 'fastestFullClear' in data_values:
+            if not ('fastestFullClear' in raid_now_dict) or (raid_now_dict['fastestFullClear'] > data_values['fastestFullClear']['value']):
+                raid_now_dict['fastestFullClear'] = data_values['fastestFullClear']['value']
+        if 'bestPlayerCountDetails' in data_values:
+            accountCount = data_values['bestPlayerCountDetails']['accountCount']
+            if not ('bestPlayerCountDetails' in raid_now_dict) or (accountCount < raid_now_dict['bestPlayerCountDetails']):
+                raid_now_dict['bestPlayerCountDetails'] = accountCount
+        if 'lowAccountCountActivities' in data_values:
+            accountCount = get_Activities_lowest_accountCount(
+                data_values['lowAccountCountActivities']
+            )
+            if not ('lowAccountCountActivities' in raid_now_dict) or (accountCount < raid_now_dict['lowAccountCountActivities']):
+                raid_now_dict['lowAccountCountActivities'] = accountCount
+        if 'flawlessActivities' in data_values:
+            # raid_now_dict['flawlessActivities']
+            accountCount = get_Activities_lowest_accountCount(
+                data_values['flawlessActivities']
+            )
+            if not ('flawlessActivities' in raid_now_dict) or (accountCount < raid_now_dict['flawlessActivities']):
+                raid_now_dict['flawlessActivities'] = accountCount
+    else:
+        all_raid_data_dict[activity_name] = {
+            'clears': data_values['clears'],
+            'fullClears': data_values['fullClears'],
+            'sherpaCount': data_values['sherpaCount'],
+            'fastestFullClear': data_values['fastestFullClear']['value'] if 'fastestFullClear' in data_values else 0,
+        }
+        if 'bestPlayerCountDetails' in data_values:
+            all_raid_data_dict[activity_name]['bestPlayerCountDetails'] = data_values['bestPlayerCountDetails']['accountCount']
+        if 'lowAccountCountActivities' in data_values:
+            all_raid_data_dict[activity_name]['lowAccountCountActivities'] = get_Activities_lowest_accountCount(
+                data_values['lowAccountCountActivities']
+            )
+        if 'flawlessActivities' in data_values:
+            all_raid_data_dict[activity_name]['flawlessActivities'] = get_Activities_lowest_accountCount(
+                data_values['flawlessActivities']
+            )
+
+
+突袭_奇数颜色 = '#292929'
+突袭_偶数颜色 = '#1F1F1F'
+突袭_奇数背景 = Image.new('RGB', [700, 120], '#292929')
+突袭_偶数背景 = Image.new('RGB', [700, 120], '#1F1F1F')
+
+深岩墓室_ = Image.open(f'深岩墓室.png')
+救赎花园_ = Image.open(f'救赎花园.png')
+最后一愿_ = Image.open(f'最后一愿.png')
+忧愁王冠_ = Image.open(f'忧愁王冠.png')
+往日之苦_ = Image.open(f'往日之苦.png')
+星之塔巅峰_ = Image.open(f'星之塔：巅峰.png')
+世界吞噬者巅峰_ = Image.open(f'世界吞噬者：巅峰.png')
+利维坦巅峰_ = Image.open(f'利维坦：巅峰.png')
+星之塔普通_ = Image.open(f'星之塔：普通.png')
+世界吞噬者普通_ = Image.open(f'世界吞噬者：普通.png')
+利维坦普通_ = Image.open(f'利维坦：普通.png')
+raid双榜图_ = Image.open(f'raid双榜图 (自定义).png')
+
+
+RAID_IMAGE = {
+    '深岩墓室': 深岩墓室_,
+    '救赎花园': 救赎花园_,
+    '最后一愿': 最后一愿_,
+    '忧愁王冠': 忧愁王冠_,
+    '往日之苦': 往日之苦_,
+    '星之塔：巅峰': 星之塔巅峰_,
+    '世界吞噬者：巅峰': 世界吞噬者巅峰_,
+    '利维坦：巅峰': 利维坦巅峰_,
+    '星之塔：普通': 星之塔普通_,
+    '世界吞噬者：普通': 世界吞噬者普通_,
+    '利维坦：普通': 利维坦普通_
+}
+
+突袭_绿色 = '#31b573'
+突袭_蓝色 = '#00709e'
+突袭_橙色 = '#f4b757'
+突袭_青色 = '#3eb8b4'
+_深岩墓室 = ImageFont.truetype('思源黑体B.otf', size=24)
+_导师次数 = ImageFont.truetype('思源黑体B.otf', size=16)
+_FlawlessDuo = ImageFont.truetype('思源黑体B.otf', size=13)
+_段位文字 = ImageFont.truetype('思源黑体B.otf', size=18)
+
+TIER_COLOR = {
+    'Challenger': '#FA576F',
+    'Master': '#FA576F',
+    'Diamond': '#048AB4',
+    'Platinum': '#04B1A1',
+    'Gold': '#FABC44',
+    'Silver': '#9EA3B0',
+    'Bronze': '#6A5B3F'
+}
+
+RAID_FLAWLESS_DICT = {
+    '深岩墓室': '3560923614',
+    '救赎花园': '1522774125',
+    '最后一愿': '380332968',
+    '忧愁王冠': '3292013042',
+    '往日之苦': '2925485370',
+}
+
+
+def get_time_text(secondes):
+    if secondes > 0:
+        m, s = divmod(secondes, 60)
+        h, m = divmod(m, 60)
+        if h == 0:
+            time = f'{m}m {s}s'
+        else:
+            time = f'{h}h {m}m {s}s'
+        return time
+    else:
+        return '无'
+
+
+def get_flawless_tag(tag_list: list, records: dict, raidname: str):
+    if raidname not in RAID_FLAWLESS_DICT:
+        return
+
+    for tag in tag_list:
+        if 'Flawless' in tag:
+            return
+
+    record_id = RAID_FLAWLESS_DICT[raidname]
+    state = records[record_id]['state']
+    RecordRedeemed = (state & 1) > 0
+    ObjectiveNotCompleted = (state & 4) > 0
+    if RecordRedeemed:
+        tag_list.append('Flawless')
+        return
+    if not ObjectiveNotCompleted:
+        tag_list.append('Flawless')
+        return
+
+
+@ on_command('突袭', aliases=('raid', 'RAID', 'Raid'), only_to_me=False)
+async def get_raid(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [900])
+        args = info['profile']['data']['userInfo']['displayName']
+        records = info['profileRecords']['data']['records']
+        membershipid = info['profile']['data']['userInfo']['membershipId']
+        url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
+        async with aiohttp.request("GET", url) as r:
+            response = await r.text(encoding="utf-8")
+        raid_info = json.loads(response)
+        raid_info = raid_info['response']
+
+        speed_value = get_time_text(raid_info['speedRank']['value'])
+        speed_tier = raid_info['speedRank']['tier']
+        speed_subtier = raid_info['speedRank']['subtier'] \
+            if 'subtier' in raid_info['speedRank'] else ''
+        img_speed = Image.new(
+            'RGB', [200, 80], TIER_COLOR[speed_tier])
+        raid双榜图speed_ = Image.composite(raid双榜图_, Image.new(
+            'RGB', raid双榜图_.size, TIER_COLOR[speed_tier]), raid双榜图_)
+
+        clears_value = raid_info['clearsRank']['value']
+        clears_tier = raid_info['clearsRank']['tier']
+        clears_subtier = raid_info['clearsRank']['subtier'] \
+            if 'subtier' in raid_info['clearsRank'] else ''
+        img_clears = Image.new(
+            'RGB', [200, 80], TIER_COLOR[clears_tier])
+        raid双榜图clears_ = Image.composite(raid双榜图_, Image.new(
+            'RGB', raid双榜图_.size, TIER_COLOR[clears_tier]), raid双榜图_)
+
+        raid_data_dict = {}
+        for i in raid_info['activities']:
+            await add_raid_data_dict(raid_data_dict, i)
+
+        raid_data_dict_len = len(raid_data_dict)
+        img_raid = Image.new(
+            'RGB', [700, 120 + raid_data_dict_len * 120], '#303030')
+        draw = ImageDraw.Draw(img_raid)
+        draw.text([40, 20], f'小日向Raid查询', '#CCCCCC', _深岩墓室)
+        draw.text([40, 65], f'{args}', 'white', _深岩墓室)
+        img_raid.paste(img_clears, (260, 20))
+        img_raid.paste(img_speed, (480, 20))
+        img_raid.paste(raid双榜图clears_, (260, 30))
+        img_raid.paste(raid双榜图speed_, (480, 30))
+
+        draw.text([320, 27], f'Full Clears Rank', 'white', _FlawlessDuo)
+        draw.text([320, 50], f'{clears_tier} {clears_subtier}', 'white', _段位文字)
+        draw.text([320, 75], f'{clears_value}', 'white', _FlawlessDuo)
+
+        draw.text([540, 27], f'Speed Rank', 'white', _FlawlessDuo)
+        draw.text([540, 50], f'{speed_tier} {speed_subtier}', 'white', _段位文字)
+        draw.text([540, 75], f'{speed_value}', 'white', _FlawlessDuo)
+
+        i = 0
+        for raidname in RAID_LIST:
+            if raidname not in raid_data_dict:
+                continue
+
+            tag_list = []
+            raid_now_dict = raid_data_dict[raidname]
+            clears = raid_now_dict['clears']
+            fullClears = raid_now_dict['fullClears']
+            sherpaCount = raid_now_dict['sherpaCount']
+            fastestFullClear = get_time_text(raid_now_dict['fastestFullClear'])
+            if 'flawlessActivities' in raid_now_dict:
+                flawlessActivities = raid_now_dict['flawlessActivities']
+            else:
+                flawlessActivities = 0
+
+            if 'lowAccountCountActivities' in raid_now_dict:
+                lowAccountCountActivities = raid_now_dict['lowAccountCountActivities']
+            else:
+                lowAccountCountActivities = 0
+
+            if flawlessActivities and lowAccountCountActivities:
+                if flawlessActivities == lowAccountCountActivities:
+                    tag_list.append(FLAWLESS_DICT[flawlessActivities])
+                else:
+                    if flawlessActivities:
+                        tag_list.append(FLAWLESS_DICT[flawlessActivities])
+                    if lowAccountCountActivities:
+                        tag_list.append(LOWMAN_DICT[lowAccountCountActivities])
+            else:
+                if flawlessActivities:
+                    tag_list.append(FLAWLESS_DICT[flawlessActivities])
+                if lowAccountCountActivities:
+                    tag_list.append(LOWMAN_DICT[lowAccountCountActivities])
+            get_flawless_tag(tag_list, records, raidname)
+
+            突袭原图片 = RAID_IMAGE[raidname]
+            if i % 2 == 0:
+                img_raid.paste(突袭_偶数背景, (0, 120 + 120 * i))
+                突袭图片 = Image.composite(突袭原图片, Image.new(
+                    'RGB', 突袭原图片.size, 突袭_偶数颜色), 突袭原图片)
+            else:
+                img_raid.paste(突袭_奇数背景, (0, 120 + 120 * i))
+                突袭图片 = Image.composite(突袭原图片, Image.new(
+                    'RGB', 突袭原图片.size, 突袭_奇数颜色), 突袭原图片)
+            img_raid.paste(突袭图片, (10, 10 + 120 + 120 * i))
+            draw.text([290, 15 + 120 + 120 * i], f'{raidname}', 'white', _深岩墓室)
+            draw.text([290, 2+35+15 + 120 + 120 * i],
+                      f'导师：{sherpaCount}次', 突袭_橙色, _导师次数)
+            draw.text([290, 30 + 35 + 15 + 120 + 120 * i],
+                      f'最快：{fastestFullClear}', 突袭_青色, _导师次数)
+            全程次数 = fullClears
+            完成次数 = clears
+            全程长度 = int(全程次数 / 完成次数 * 200)
+            if 全程长度:
+                全程 = Image.new('RGB', [全程长度, 10], 突袭_绿色)
+                完成 = Image.new('RGB', [200-全程长度, 10], 突袭_蓝色)
+                img_raid.paste(全程, (450, 80 + 120 + 120 * i))
+                img_raid.paste(完成, (450+全程长度, 80 + 120 + 120 * i))
+            else:
+                完成 = Image.new('RGB', [200, 10], 突袭_蓝色)
+                img_raid.paste(完成, (450, 80 + 120 + 120 * i))
+            draw.text([450, 50 + 120 + 120 * i],
+                      f'{全程次数} - {完成次数}', '#dadada', _深岩墓室)
+            draw.text([575, 95 + 120 + 120 * i], '全程 - 完成', '#dadada', _导师次数)
+
+            height = 5
+            for tag in tag_list:
+                w, h = _FlawlessDuo.getsize(tag)
+                tag颜色 = TAG_COLOR_DICT[tag]
+                底色 = Image.new('RGB', [w + 4, h + 4], tag颜色)
+                img_raid.paste(底色, (250 - w, height + 15 + 120 + 120 * i))
+                draw.text([250 - w+2, height + 15 + 120 + 120 * i+1],
+                          f'{tag}', 'white', _FlawlessDuo)
+                height += 25
+            i += 1
+
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'raid_{name}.png')
+        img_raid.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+    except Exception as err:
+        await session.send(f'{err}', at_sender=True)
+
+
+DUNGEON_NAEM_DICT = {
+    '异域任务：前兆: 大师': '前兆: 大师',
+    '异域任务：前兆: 普通': '前兆: 普通',
+    '先知': '先知',
+    '预言': '预言',
+    '异端深渊: 普通': '异端深渊',
+    '破碎王座': '破碎王座',
+    '行动时刻（英雄）': '行动时刻: 英雄',
+    '行动时刻': '行动时刻: 普通',
+    '冥冥低语（英雄模式）': '冥冥低语: 英雄',
+    '冥冥低语': '冥冥低语: 普通'
+}
+
+DUNGEON_NAEM_LIST = list(DUNGEON_NAEM_DICT.values())
+
+
+async def add_dungeon_data_dict(all_dungeon_data_dict, i):
+    dungeonHash = i['activityHash']
+    dungeonNameInfo = await destiny.decode_hash(dungeonHash, 'DestinyActivityDefinition')
+    try:
+        dungeonName = DUNGEON_NAEM_DICT[dungeonNameInfo['displayProperties']['name']]
+    except Exception as e:
+        raise Exception('某个数据丢失，请及时联系小日向开发者，感谢🤞\n{e}')
+    data_values = i['values']
+    if dungeonName in all_dungeon_data_dict:
+        dungeon_now_dict = all_dungeon_data_dict[dungeonName]
+        dungeon_now_dict['clears'] += data_values['clears']
+        dungeon_now_dict['fullClears'] += data_values['fullClears']
+        dungeon_now_dict['sherpaCount'] += data_values['sherpaCount']
+        if 'fastestFullClear' in data_values:
+            if not ('fastestFullClear' in dungeon_now_dict) or (dungeon_now_dict['fastestFullClear'] > data_values['fastestFullClear']['value']):
+                dungeon_now_dict['fastestFullClear'] = data_values['fastestFullClear']['value']
+        if 'bestPlayerCountDetails' in data_values:
+            accountCount = data_values['bestPlayerCountDetails']['accountCount']
+            if not ('bestPlayerCountDetails' in dungeon_now_dict) or (accountCount < dungeon_now_dict['bestPlayerCountDetails']):
+                dungeon_now_dict['bestPlayerCountDetails'] = accountCount
+        if 'lowAccountCountActivities' in data_values:
+            accountCount = get_Activities_lowest_accountCount(
+                data_values['lowAccountCountActivities']
+            )
+            if not ('lowAccountCountActivities' in dungeon_now_dict) or (accountCount < dungeon_now_dict['lowAccountCountActivities']):
+                dungeon_now_dict['lowAccountCountActivities'] = accountCount
+        if 'flawlessActivities' in data_values:
+            # dungeon_now_dict['flawlessActivities']
+            accountCount = get_Activities_lowest_accountCount(
+                data_values['flawlessActivities']
+            )
+            if not ('flawlessActivities' in dungeon_now_dict) or (accountCount < dungeon_now_dict['flawlessActivities']):
+                dungeon_now_dict['flawlessActivities'] = accountCount
+    else:
+        all_dungeon_data_dict[dungeonName] = {
+            'clears': data_values['clears'],
+            'fullClears': data_values['fullClears'],
+            'sherpaCount': data_values['sherpaCount'],
+            'fastestFullClear': data_values['fastestFullClear']['value'] if 'fastestFullClear' in data_values else 0,
+        }
+        if 'bestPlayerCountDetails' in data_values:
+            all_dungeon_data_dict[dungeonName]['bestPlayerCountDetails'] = data_values['bestPlayerCountDetails']['accountCount']
+        if 'lowAccountCountActivities' in data_values:
+            all_dungeon_data_dict[dungeonName]['lowAccountCountActivities'] = get_Activities_lowest_accountCount(
+                data_values['lowAccountCountActivities']
+            )
+        if 'flawlessActivities' in data_values:
+            all_dungeon_data_dict[dungeonName]['flawlessActivities'] = get_Activities_lowest_accountCount(
+                data_values['flawlessActivities']
+            )
+
+
+DUNGEON_APPEND_DICT = {
+    '异端深渊': {'Flawless Solo': '3950599483',
+             'Solo': '3841336511',
+             'Flawless': '245952203', },
+    '破碎王座': {'Flawless Solo': '3205009787',
+             'Solo': '3899996566',
+             'Flawless': '1178448425', },
+    '先知': {'Flawless Solo': '3047181179',
+           'Solo': '3657275647',
+           'Flawless': '2902814383'},
+    '预言': {'Flawless Solo': '3191784400',
+           'Solo': '3002642730',
+           'Flawless': '2010041484'},
+    '前兆: 大师': {'Flawless': '2335417976'},
+    '前兆: 普通': {'Flawless Solo': '4206923617'}
+}
+
+
+def append_method(state: int, typeName: str,tag_list:list):
+
+    RecordRedeemed = (state & 1) > 0
+    ObjectiveNotCompleted = (state & 4) > 0
+    if RecordRedeemed:
+        tag_list.append(typeName)
+        return
+    if not ObjectiveNotCompleted:
+        tag_list.append(typeName)
+        return
+
+def dungeon_tag_append(tag_list: list, records: dict, dungeonName: str):
+    if dungeonName not in DUNGEON_APPEND_DICT:
+        return
+
+    if dungeonName != '先知':
+        records = records['profileRecords']['data']['records']
+    else:
+        characterid = list(records['characterRecords']['data'].keys())
+        characterid = characterid[0]
+        records = records['characterRecords']['data'][characterid]['records']
+    
+    
+    for tag in tag_list:
+        if 'Flawless Solo' in tag:
+            return
+
+    for typeName,record_id in DUNGEON_APPEND_DICT[dungeonName].items():
+        if typeName == 'Falwless Solo':
+            state = records[record_id]['state']
+            append_method(state, typeName, tag_list)
+            return
+
+        if typeName in tag_list:
+            continue
+        else:
+            state = records[record_id]['state']
+            append_method(state, typeName, tag_list)
+
+
+前兆大师_ = Image.open(f'前兆大师.png')
+前兆普通_ = Image.open(f'前兆大师.png')
+先知_ = Image.open(f'先知.png')
+预言_ = Image.open(f'预言.png')
+异端深渊_ = Image.open(f'异端深渊.png')
+破碎王座_ = Image.open(f'破碎王座.png')
+行动时刻英雄_ = Image.open(f'行动时刻英雄.png')
+行动时刻普通_ = Image.open(f'行动时刻英雄.png')
+冥冥低语英雄_ = Image.open(f'冥冥低语英雄.png')
+冥冥低语普通_ = Image.open(f'冥冥低语英雄.png')
+
+
+DUNGEON_IMAGE = {
+    '前兆: 大师': 前兆大师_,
+    '前兆: 普通': 前兆普通_,
+    '先知': 先知_,
+    '预言': 预言_,
+    '异端深渊': 异端深渊_,
+    '破碎王座': 破碎王座_,
+    '行动时刻: 英雄': 行动时刻英雄_,
+    '行动时刻: 普通': 行动时刻普通_,
+    '冥冥低语: 英雄': 冥冥低语英雄_,
+    '冥冥低语: 普通': 冥冥低语普通_
+}
+
+
+
+@ on_command('地牢', aliases=('地牢查询'), only_to_me=False)
+async def get_player_dungeon_info(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [900])
+        args = info['profile']['data']['userInfo']['displayName']
+        membershipid = info['profile']['data']['userInfo']['membershipId']
+        url = f'https://bolskmfp72.execute-api.us-west-2.amazonaws.com/dungeon/api/player/{membershipid}'
+        async with aiohttp.request("GET", url) as r:
+            response = await r.text(encoding="utf-8")
+        dungeon_raw_data = json.loads(response)
+        if 'response' not in dungeon_raw_data:
+            raise Exception('获取玩家信息失败，请检查输入的名称或尝试使用队伍码查询')
+        if not (dungeon_raw_data := dungeon_raw_data['response']):
+            raise Exception('获取玩家信息失败，请检查输入的名称或尝试使用队伍码查询')
+
+        clears_value = dungeon_raw_data['clearsRank']['value']
+        clears_tier = dungeon_raw_data['clearsRank']['tier']
+        clears_subtier = dungeon_raw_data['clearsRank']['subtier'] \
+            if 'subtier' in dungeon_raw_data['clearsRank'] else ''
+        img_clears = Image.new(
+            'RGB', [200, 80], TIER_COLOR[clears_tier])
+        dungeon双榜图clears_ = Image.composite(raid双榜图_, Image.new(
+            'RGB', raid双榜图_.size, TIER_COLOR[clears_tier]), raid双榜图_)
+
+
+        speed_value = get_time_text(dungeon_raw_data['speedRank']['value'])
+        speed_tier = dungeon_raw_data['speedRank']['tier']
+        speed_subtier = dungeon_raw_data['speedRank']['subtier'] \
+            if 'subtier' in dungeon_raw_data['speedRank'] else ''
+        img_speed = Image.new(
+            'RGB', [200, 80], TIER_COLOR[speed_tier])
+        dungeon双榜图speed_ = Image.composite(raid双榜图_, Image.new(
+            'RGB', raid双榜图_.size, TIER_COLOR[speed_tier]), raid双榜图_)
+
+
+        dungeon_data_dict = {}
+        for i in dungeon_raw_data['activities']:
+            await add_dungeon_data_dict(dungeon_data_dict, i)
+
+        dungeon_dictkeys_to_list = list(dungeon_data_dict.keys())
+        dungeon_dict_length = len(dungeon_data_dict)
+        img_dungeon = Image.new(
+            'RGB', [700, 120 + dungeon_dict_length* 120], '#303030')
+        draw = ImageDraw.Draw(img_dungeon)
+        draw.text([40, 20], f'小日向地牢查询', '#CCCCCC', _深岩墓室)
+        draw.text([40, 65], f'{args}', 'white', _深岩墓室)
+        img_dungeon.paste(img_clears, (260, 20))
+        img_dungeon.paste(img_speed, (480, 20))
+        img_dungeon.paste(dungeon双榜图clears_, (260, 30))
+        img_dungeon.paste(dungeon双榜图speed_, (480, 30))
+
+        draw.text([320, 27], f'Full Clears Rank', 'white', _FlawlessDuo)
+        draw.text([320, 50], f'{clears_tier} {clears_subtier}', 'white', _段位文字)
+        draw.text([320, 75], f'{clears_value}', 'white', _FlawlessDuo)
+
+        draw.text([540, 27], f'Speed Rank', 'white', _FlawlessDuo)
+        draw.text([540, 50], f'{speed_tier} {speed_subtier}', 'white', _段位文字)
+        draw.text([540, 75], f'{speed_value}', 'white', _FlawlessDuo)
+
+
+        i = 0
+        for dungenonName in DUNGEON_NAEM_LIST:
+            if dungenonName not in dungeon_dictkeys_to_list:
+                continue
+            tag_list = []
+            dungeon_now_dict = dungeon_data_dict[dungenonName]
+            clears = dungeon_now_dict['clears']
+            fullClears = dungeon_now_dict['fullClears']
+            sherpaCount = dungeon_now_dict['sherpaCount']
+            fastestFullClear = get_time_text(
+                dungeon_now_dict['fastestFullClear'])
+            if 'flawlessActivities' in dungeon_now_dict:
+                flawlessActivities = dungeon_now_dict['flawlessActivities']
+            else:
+                flawlessActivities = 0
+
+            if 'lowAccountCountActivities' in dungeon_now_dict:
+                lowAccountCountActivities = dungeon_now_dict['lowAccountCountActivities']
+            else:
+                lowAccountCountActivities = 0
+
+            if lowAccountCountActivities == 1 and flawlessActivities == lowAccountCountActivities:
+                tag_list.append('Flawless Solo')
+            else:
+                if flawlessActivities:
+                    tag_list.append('Flawless')
+                if lowAccountCountActivities == 1:
+                    tag_list.append('Solo')
+            dungeon_tag_append(tag_list, info, dungenonName)
+
+            地牢原图片 = DUNGEON_IMAGE[dungenonName]
+
+            if i % 2 == 0:
+                img_dungeon.paste(突袭_偶数背景, (0, 120 + 120 * i))
+                地牢图片 = Image.composite(地牢原图片, Image.new(
+                    'RGB', 地牢原图片.size, 突袭_偶数颜色), 地牢原图片)
+            else:
+                img_dungeon.paste(突袭_奇数背景, (0, 120 + 120 * i))
+                地牢图片 = Image.composite(地牢原图片, Image.new(
+                    'RGB', 地牢原图片.size, 突袭_奇数颜色), 地牢原图片)
+            img_dungeon.paste(地牢图片, (10, 10 + 120 + 120 * i))
+            draw.text([290, 15 + 120 + 120 * i],
+                      f'{dungenonName}', 'white', _深岩墓室)
+            draw.text([290, 2+35+15 + 120 + 120 * i],
+                      f'导师：{sherpaCount}次', 突袭_橙色, _导师次数)
+            draw.text([290, 30 + 35 + 15 + 120 + 120 * i],
+                      f'最快：{fastestFullClear}', 突袭_青色, _导师次数)
+            全程次数 = fullClears
+            完成次数 = clears
+            全程长度 = int(全程次数 / 完成次数 * 200)
+            if 全程长度:
+                全程 = Image.new('RGB', [全程长度, 10], 突袭_绿色)
+                完成 = Image.new('RGB', [200-全程长度, 10], 突袭_蓝色)
+                img_dungeon.paste(全程, (450, 80 + 120 + 120 * i))
+                img_dungeon.paste(完成, (450+全程长度, 80 + 120 + 120 * i))
+            else:
+                完成 = Image.new('RGB', [200, 10], 突袭_蓝色)
+                img_dungeon.paste(完成, (450, 80 + 120 + 120 * i))
+            draw.text([450, 50 + 120 + 120 * i],
+                      f'{全程次数} - {完成次数}', '#dadada', _深岩墓室)
+            draw.text([575, 95 + 120 + 120 * i], '全程 - 完成', '#dadada', _导师次数)
+
+            height = 5
+            for tag in tag_list:
+                w, h = _FlawlessDuo.getsize(tag)
+                tag颜色 = TAG_COLOR_DICT[tag]
+                底色 = Image.new('RGB', [w + 4, h + 4], tag颜色)
+                img_dungeon.paste(底色, (250 - w, height + 15 + 120 + 120 * i))
+                draw.text([250 - w+2, height + 15 + 120 + 120 * i+1],
+                          f'{tag}', 'white', _FlawlessDuo)
+                height += 25
+            i += 1
+
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'dungeon_{name}.png')
+        img_dungeon.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
+    except Exception as e:
+        await session.send(f'{e}',at_sender=True)
