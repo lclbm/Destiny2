@@ -15,6 +15,7 @@ lbw_folder = R.get('record/55k/').path
 ai_folder = R.get('record/ai/').path
 dsm_folder = R.get('record/dsm/').path
 shabi_folder= R.get('record/shabi/').path
+chongju_folder = R.get('record/chongju/').path
 
 
 def get_xcw():
@@ -46,6 +47,13 @@ def get_shabi():
     filename = random.choice(files)
     rec = R.get('record/shabi/', filename)
     return rec
+
+def get_chongju():
+    files = os.listdir(chongju_folder)
+    filename = random.choice(files)
+    rec = R.get('record/chongju/', filename)
+    return rec
+
 
 
 @sv.on_prefix(['骂','笨蛋','老婆'], only_to_me=True)
@@ -94,6 +102,18 @@ async def dsm(bot, ev) -> MessageSegment:
 async def shabi(bot, ev) -> MessageSegment:
     # conditions all ok, send a xcw.
     file = get_shabi()
+    try:
+        rec = MessageSegment.record(f'file:///{os.path.abspath(file.path)}')
+        await bot.send(ev, rec)
+    except CQHttpError:
+        sv.logger.error("发送失败")
+
+
+
+@sv.on_prefix(['尸飕','虫狙','冥冥低语'], only_to_me=True)
+async def chongju(bot, ev) -> MessageSegment:
+    # conditions all ok, send a xcw.
+    file = get_chongju()
     try:
         rec = MessageSegment.record(f'file:///{os.path.abspath(file.path)}')
         await bot.send(ev, rec)

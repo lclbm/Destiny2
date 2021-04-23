@@ -42,24 +42,7 @@ Fail = 0
 args = ''
 AppendInfo = ''  # '\n❗小日向将继续免费使用至18号，具体收费请回复收费以查询'
 
-HELP_MSG = f'''目 前 可 公 开 的 情 报：
-✨PVP/Pvp/pvp [队伍码/用户名]
-💊Raid/raid [队伍码/用户名]
-🎐智谋 [队伍码/用户名]
-📍地牢 [队伍码/用户名]
-🎯ELO [队伍码/用户名]
-⚪战绩 [队伍码/用户名]
-🎊队伍 [队伍码/用户名]
-🏆击杀 [队伍码/用户名] [职业]
-🐧企鹅 [队伍码/用户名]
-✈增幅 [队伍码/用户名]
-🦴骨头 [队伍码/用户名]
-🥚蛋/卵 [队伍码/用户名]
-🎈绑定功能已开放，输入绑定帮助查看
-📣小日向交流群827529117
-交流开发/提交问题/购买小日向'''
-
-sv = hoshino.Service('命运2', help_=HELP_MSG)
+sv = hoshino.Service('命运2')
 
 
 # ⚪生涯查询 [队伍码/用户名]
@@ -230,6 +213,9 @@ async def GetInfo(args, components: list) -> dict:
     # TODO：优化raid查询的keyerror
     # if len(response['Response']['metrics']) == 1:
     #     raise Error_Privacy(args)
+    for data in response['Response']:
+        if 'data' not in response['Response'][data] and data != 'profileTransitoryData':
+            raise Exception('🤔啊这...当前玩家命运2数据设置为隐私不可见')
     response['Response']['membershipid'] = membershipid
     response['Response']['membershiptype_num'] = membershiptype
     response['Response']['membershiptype_char'] = result['membershiptype_char']
@@ -1241,6 +1227,8 @@ def Check_qianzhao(info):
     msg = ''
     records = info['profileRecords']['data']['records']
     格力康号线索 = info['profileProgression']['data']['checklists']['3975225462']
+    notShowTag = 0
+    notGetWeek = 0
     for i in 前兆['碎片']:
         objectives = records[i]['objectives'][0]
         progressValue = objectives['progress']
@@ -1249,10 +1237,16 @@ def Check_qianzhao(info):
         name = 前兆['碎片'][i]['name']
         msg += f'{icon}{name}：{progressValue}/{completionValue}\n'
         if progressValue != completionValue:
+            notGetWeek += 1
+            if notShowTag:
+                continue
+            else:
+                notShowTag = 1
             entries = 前兆['碎片'][i]['entries']
             for check in entries:
                 if not 格力康号线索[check]:
                     msg += f'{entries[check]["name"]}：{entries[check]["location"]}\n'
+
 
     for i in 前兆['成就']:
         objectives = records[i]['intervalObjectives'][11]
@@ -1265,7 +1259,7 @@ def Check_qianzhao(info):
     msg += '🎉回复d2以查看其他功能'
     head = '【前兆查询】\n'
     head += msg
-    return head
+    return head,notGetWeek
 
 
 @on_command('前兆', only_to_me=False)
@@ -1278,10 +1272,13 @@ async def Check_qianzhao_aync(session):
             args = session.current_arg
         info = await GetInfo(args, [900, 104])
         args = info['profile']['data']['userInfo']['displayName']
-        res = Check_qianzhao(info)
+        res,notGetWeek = Check_qianzhao(info)
         head = f'{args}\n' + res
         print(head)
         await session.send(head, at_sender=True)
+        if notGetWeek:
+            await asyncio.sleep(2)
+            await session.send(f'ヾ(•ω•`)o\n😝现在天选赛季结束还有3周\n👉[{args}]还差 {notGetWeek}周 的线索没有摸完\n👉摸完全部3周的线索可以解锁天选者称号的隐藏成就\n🤣小日向提醒你一下，别忘了噢', at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
@@ -1603,8 +1600,26 @@ async def Check_shengya_aync(session: CommandSession):
 黑体 = ImageFont.truetype('simhei.ttf', size=20)
 活动标题 = ImageFont.truetype('font1559.ttf', size=30)
 标题2 = ImageFont.truetype('font1559.ttf', size=24)
-绿块 = Image.new('RGB', [67, 100], '#00b034')
-红块 = Image.new('RGB', [67, 100], (229, 115, 125))
+绿块 = Image.new('RGB', [40, 100], '#00b034')
+红块 = Image.new('RGB', [40, 100], (229, 115, 125))
+
+
+
+
+
+奇数颜色_战绩 = '#292929'
+偶数颜色_战绩 = '#1F1F1F'
+奇数块_战绩 = Image.new('RGB', [1000, 100], 奇数颜色_战绩)
+偶数块_战绩 = Image.new('RGB', [1000, 100], 偶数颜色_战绩)
+
+绿色_战绩 = '#3D8D4D'
+红色_战绩 = '#8F2020'
+标题_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+KD字体_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=36)
+KD标题字体_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf',size=20)
+中字_战绩 = ImageFont.truetype('MYingHeiPRC-W5.ttf',size=16)
+小字_战绩 = ImageFont.truetype('MYingHeiPRC-W3.ttf',size=16)
+
 
 
 def get_activity_time(period):
@@ -1637,16 +1652,14 @@ async def d2_activity(session):
             args = session.current_arg
         res = await GetInfo(args, [100, 200])
         args = res['profile']['data']['userInfo']['displayName']
-        msg = args + '\n'
-
-        img_raw = Image.new('RGB', [900, 3000], 'White')
+        
         activityList = []
         characters = res['characters']['data']
 
         characterIdList = list(characters.keys())
         for characterId in characterIdList:
             className = classdict[characters[characterId]['classHash']]
-            activities = await destiny.api.get_activity_history(res['membershiptype_num'], res['membershipid'], characterId, 30)
+            activities = await destiny.api.get_activity_history(res['membershiptype_num'], res['membershipid'], characterId, 50)
             activities = activities['Response']['activities']
             for i in activities:
                 i['characterId'] = characterId
@@ -1654,53 +1667,137 @@ async def d2_activity(session):
             activityList.extend(activities)
         activityList_order = sorted(
             activityList, key=lambda x: x['period'], reverse=True)
-        activityListToBeUsed = activityList_order[:30]
-        draw = ImageDraw.Draw(img_raw)
-        for i in range(30):
-            res = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
-            res2 = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['referenceId'], 'DestinyActivityDefinition')
+        activityListToBeUsed = activityList_order[:50]
+        
+
+
+        Length = len(activityListToBeUsed)
+        activityRaw = Image.new('RGB', [1000, 80+Length*100], '#303030')
+        draw = ImageDraw.Draw(activityRaw)
+
+        draw.text([60,15],
+            f'小日向战绩查询: {args}',
+            font=KD字体_战绩, 
+            fill='white')
+        
+        
+        
+        for i in range(50):
+            activity = activityListToBeUsed[i]
+            res = await destiny.decode_hash(activity['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
+            res2 = await destiny.decode_hash(activity['activityDetails']['referenceId'], 'DestinyActivityDefinition')
             模式 = res['displayProperties']['name']
             名称 = res2['displayProperties']['name']
-            时间 = get_activity_time(activityListToBeUsed[i]['period'])
-            K = activityListToBeUsed[i]['values']['kills']['basic']['displayValue']
-            D = activityListToBeUsed[i]['values']['deaths']['basic']['displayValue']
-            A = activityListToBeUsed[i]['values']['assists']['basic']['displayValue']
-            进行时间 = activityListToBeUsed[i]['values']['activityDurationSeconds']['basic']['displayValue']
-            Score = activityListToBeUsed[i]['values']['score']['basic']['displayValue']
-
-            draw.text((86, 6+100*i), f'{模式}',
-                      font=活动标题, fill=黑色, direction=None)
-            draw.text((86, 70+100*i), f'{名称} · {时间}',
-                      font=黑体, fill=灰色, direction=None)
-            draw.text((468, 60+100*i), f'用时：{进行时间}',
-                      font=黑体, fill=黑色, direction=None)
-            draw.text((468, 30+100*i), f'{activityListToBeUsed[i]["className"]}',
-                      font=黑体, fill=黑色, direction=None)
-            draw.text((640, 20+100*i), 'K/D/A',
-                      font=标题2, fill=黑色, direction=None)
-            draw.text((640, 60+100*i), f'{K}/{D}/{A}',
-                      font=黑体, fill=黑色, direction=None)
-            draw.text((740, 20+100*i), 'Score',
-                      font=标题2, fill=黑色, direction=None)
-            draw.text((740, 60+100*i), f'{Score}',
-                      font=黑体, fill=黑色, direction=None)
-            if 'standing' in activityListToBeUsed[i]['values']:
-                if activityListToBeUsed[i]['values']['standing']['basic']['displayValue'] == 'Victory':
-                    img_raw.paste(绿块, (0, 0 + 100 * i))
-                else:
-                    img_raw.paste(红块, (0, 0 + 100 * i))
+            modeNum = activity['activityDetails']['modes']
+            时间 = get_activity_time(activity['period'])
+            K = int(activity['values']['kills']['basic']['displayValue'])
+            D = int(activity['values']['deaths']['basic']['displayValue'])
+            A = int(activity['values']['assists']['basic']['displayValue'])
+            KD = activity['values']['killsDeathsRatio']['basic']['displayValue']
+            进行时间 = activity['values']['activityDurationSeconds']['basic']['displayValue']
+            Score = activity['values']['score']['basic']['displayValue']
+            if i % 2 ==0:
+                activityRaw.paste(偶数块_战绩,[0,80+i*100])
             else:
-                if activityListToBeUsed[i]['values']['completed']['basic']['displayValue'] == 'Yes':
-                    img_raw.paste(绿块, (0, 0 + 100 * i))
+                activityRaw.paste(奇数块_战绩,[0,80+i*100])
+
+            draw.text([60,95+i*100],
+                f'{模式}',
+                font=标题_战绩, 
+                fill='white'
+                )
+
+            draw.text([60,125+i*100],
+                f'▢ {名称}',
+                font=小字_战绩, 
+                fill='white'
+                )
+
+            draw.text([60,150+i*100],
+                f'▢ {时间} · 用时 {进行时间}',
+                font=小字_战绩, 
+                fill='white'
+                )
+
+            draw.text([410,95+i*100],
+                f'K: {K}',
+                font=中字_战绩, 
+                fill='white')
+
+            draw.text([410,120+i*100],
+                f'D: {D}',
+                font=中字_战绩, 
+                fill='white'
+                )
+            draw.text([410,145+i*100],
+                f'A: {A}',
+                font=中字_战绩, 
+                fill='white'
+                )
+
+            KandD = K + D
+            try:
+                D长度 = int(150 * D / KandD)
+            except:
+                D长度 = 0
+            K长度 = 150 - D长度
+            KD_K = Image.new('RGB', [K长度, 10], 绿色_战绩)
+            KD_D = Image.new('RGB', [D长度, 10], 红色_战绩)
+            activityRaw.paste(KD_K, (490, 135+100*i))
+            activityRaw.paste(KD_D, (490 + K长度, 135+100*i))
+            w,h = KD字体_战绩.getsize(f'{KD}')
+            draw.text([640-w,90+i*100],
+                f'{KD}',
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([490,150+i*100],
+                f'KD',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
+            draw.text([700,90+i*100],
+                f'{Score}',
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([700,135+i*100],
+                f'SCORE',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
+            draw.text([850,90+i*100],
+                f"{activity['className']}",
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([850,135+i*100],
+                f'CHARACTER',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
+
+            if activity['activityDetails']['mode'] == 6:
+                continue
+
+            if 'standing' in activity['values']:
+                if activity['values']['standing']['basic']['displayValue'] == 'Victory' or activity['values']['standing']['basic']['value'] <= 2:
+                    activityRaw.paste(绿块, (0, 80 + 100 * i))
                 else:
-                    img_raw.paste(红块, (0, 0 + 100 * i))
+                    activityRaw.paste(红块, (0, 80 + 100 * i))
+            else:
+                if activity['values']['completed']['basic']['displayValue'] == 'Yes':
+                    activityRaw.paste(绿块, (0, 80 + 100 * i))
+                else:
+                    activityRaw.paste(红块, (0, 80 + 100 * i))
+        
+        
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
-                            'cache', f'{name}.png')
-        img_raw.save(path, 'png')
+                            'cache', f'activit_{name}.png')
+        activityRaw.save(path, 'png')
         append = f'[CQ:image,file=file:///{path}]'
-        msg += f'{append}'
-        await session.send(msg, at_sender=True)
+        await session.send(append)
     except Exception as e:
         await session.send(f'{e}')
 
@@ -1724,7 +1821,10 @@ async def GetEloDict(membershiptype, membershipid):
     info = info['data']
     eloDict = {}
     for i in info:
-        模式 = eloModeDict[i['attributes']['playlist']]
+        try:
+            模式 = eloModeDict[i['attributes']['playlist']]
+        except:
+            continue
         Elo颜色 = eval(i['stats']['elo']['metadata']['rankColor']
                      ['value'].replace('rgb(', '').replace(')', ''))
         Elo分 = i['stats']['elo']['displayValue']
@@ -1797,7 +1897,7 @@ async def Elo(session):
         draw = ImageDraw.Draw(img_elo)
         标题块 = Image.new('RGB', [1200, 40], '#3D3D3D')
         img_elo.paste(标题块, (0, 60))
-        draw.text((50, 20), f'Elo查询：{args}',
+        draw.text((50, 20), f'小日向Elo查询：{args}',
                   font=模式, fill=标题文字, direction=None)
         draw.text((60, 70), f'模式/段位', font=标题, fill=标题文字, direction=None)
         draw.text((300, 70), f'排名', font=标题, fill=标题文字, direction=None)
@@ -1892,8 +1992,8 @@ async def Elo(session):
         append = f'[CQ:image,file=file:///{path}]'
         await session.send(f'{append}', at_sender=False)
 
-    except KeyError:
-        await session.send('Tracker服务器繁忙，请两分钟后再试', at_sender=True)
+    except KeyError as err:
+        await session.send(f'Tracker服务器繁忙，请两分钟后再试\n{err}', at_sender=True)
     except Exception as e:
         await session.send(f'{e}', at_sender=True)
 
@@ -1906,7 +2006,7 @@ FLAWLESS_DICT = {
     4: 'Flawless',
     3: 'Flawless Trio',
     2: 'Flawless Duo',
-    1: 'Flawless Solo'}
+    1: 'Solo Flawless'}
 LOWMAN_DICT = {
     3: 'Trio',
     2: 'Duo',
@@ -1916,7 +2016,7 @@ TAG_COLOR_DICT = {
     'Flawless': '#31b573',
     'Flawless Trio': '#FA576F',
     'Flawless Duo':'#FA576F',
-    'Flawless Solo':'#FA576F',
+    'Solo Flawless':'#FA576F',
     'Trio':'#f4b757',
     'Duo':'#f4b757',
     'Solo':'#00709e',
@@ -2109,7 +2209,10 @@ async def get_raid(session):
         async with aiohttp.request("GET", url) as r:
             response = await r.text(encoding="utf-8")
         raid_info = json.loads(response)
-        raid_info = raid_info['response']
+        try:
+            raid_info = raid_info['response']
+        except:
+            raise Exception(f'唉...你好像没有打过突袭噢，快跟小伙伴去试试吧！')
 
         speed_value = get_time_text(raid_info['speedRank']['value'])
         speed_tier = raid_info['speedRank']['tier']
@@ -2261,7 +2364,7 @@ async def add_dungeon_data_dict(all_dungeon_data_dict, i):
     try:
         dungeonName = DUNGEON_NAEM_DICT[dungeonNameInfo['displayProperties']['name']]
     except Exception as e:
-        raise Exception('某个数据丢失，请及时联系小日向开发者，感谢🤞\n{e}')
+        raise Exception(f'某个数据丢失，请及时联系小日向开发者，感谢🤞\n{e}')
     data_values = i['values']
     if dungeonName in all_dungeon_data_dict:
         dungeon_now_dict = all_dungeon_data_dict[dungeonName]
@@ -2308,20 +2411,20 @@ async def add_dungeon_data_dict(all_dungeon_data_dict, i):
 
 
 DUNGEON_APPEND_DICT = {
-    '异端深渊': {'Flawless Solo': '3950599483',
+    '异端深渊': {'Solo Flawless': '3950599483',
              'Solo': '3841336511',
              'Flawless': '245952203', },
-    '破碎王座': {'Flawless Solo': '3205009787',
+    '破碎王座': {'Solo Flawless': '3205009787',
              'Solo': '3899996566',
              'Flawless': '1178448425', },
-    '先知': {'Flawless Solo': '3047181179',
+    '先知': {'Solo Flawless': '3047181179',
            'Solo': '3657275647',
            'Flawless': '2902814383'},
-    '预言': {'Flawless Solo': '3191784400',
+    '预言': {'Solo Flawless': '3191784400',
            'Solo': '3002642730',
            'Flawless': '2010041484'},
     '前兆: 大师': {'Flawless': '2335417976'},
-    '前兆: 普通': {'Flawless Solo': '4206923617'}
+    '前兆: 普通': {'Solo Flawless': '4206923617'}
 }
 
 
@@ -2349,7 +2452,7 @@ def dungeon_tag_append(tag_list: list, records: dict, dungeonName: str):
     
     
     for tag in tag_list:
-        if 'Flawless Solo' in tag:
+        if 'Solo Flawless' in tag:
             return
 
     for typeName,record_id in DUNGEON_APPEND_DICT[dungeonName].items():
@@ -2479,7 +2582,7 @@ async def get_player_dungeon_info(session):
                 lowAccountCountActivities = 0
 
             if lowAccountCountActivities == 1 and flawlessActivities == lowAccountCountActivities:
-                tag_list.append('Flawless Solo')
+                tag_list.append('Solo Flawless')
             else:
                 if flawlessActivities:
                     tag_list.append('Flawless')

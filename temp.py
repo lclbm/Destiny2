@@ -15,6 +15,10 @@ destiny = pydest.Pydest(API_KEY)
 # 标题 = ImageFont.truetype('font1559.ttf', size=30)
 # 标题2 = ImageFont.truetype('font1559.ttf', size=24)
 
+模式 = ImageFont.truetype('思源黑体B.otf', size=26)
+print(模式.getsize('天选赛季'))
+print(模式.getsize('天选赛季'))
+
 
 # draw = ImageDraw.Draw(img_raw)
 # draw.text((86, 6), '钢铁旗帜占领', font=标题, fill=黑色, direction=None)
@@ -50,11 +54,11 @@ classdict = {3655393761: '泰坦', 671679327: '猎人', 2271682572: '术士',
              '泰坦': 3655393761, '猎人': 671679327, '术士': 2271682572}
 
 
-铁骑_字体 = ImageFont.truetype('MYingHeiPRC-W3.ttf', size=24)
-铁骑_颜色 = '#000000'
-秋天旗帜_字体 = ImageFont.truetype('MYingHeiPRC-W3.ttf', size=16)
-秋天旗帜_颜色 = '#A7A7A7'
-数字_字体 = ImageFont.truetype('数字字体.ttf', size=20)
+# 铁骑_字体 = ImageFont.truetype('MYingHeiPRC-W3.ttf', size=24)
+# 铁骑_颜色 = '#000000'
+# 秋天旗帜_字体 = ImageFont.truetype('MYingHeiPRC-W3.ttf', size=16)
+# 秋天旗帜_颜色 = '#A7A7A7'
+# 数字_字体 = ImageFont.truetype('数字字体.ttf', size=20)
 
 绿块 = Image.new('RGB', [65, 60], '#3D8D4D')
 红块 = Image.new('RGB', [65, 60], '#8F2020')
@@ -76,62 +80,32 @@ async def main():
     img_raw.save('02.png', 'png')
 
 
-async def zhanji():
-    activityList = []
-    res = await destiny.api.get_profile(3, 4611686018497181967, [100, 200])
-    characters = res['Response']['characters']['data']
-    characterIdList = list(characters.keys())
-    for characterId in characterIdList:
-        className = classdict[characters[characterId]['classHash']]
-        activities = await destiny.api.get_activity_history(3, 4611686018497181967, characterId, 30)
-        activities = activities['Response']['activities']
-        for i in activities:
-            i['characterId'] = characterId
-            i['className'] = className
-        activityList.extend(activities)
-    activityList_order = sorted(
-        activityList, key=lambda x: x['period'], reverse=True)
-    activityListToBeUsed = activityList_order[:30]
-    draw = ImageDraw.Draw(img_raw)
-    for i in range(30):
-        res = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
-        res2 = await destiny.decode_hash(activityListToBeUsed[i]['activityDetails']['referenceId'], 'DestinyActivityDefinition')
-        模式 = res['displayProperties']['name']
-        名称 = res2['displayProperties']['name']
-        时间 = get_activity_time(activityListToBeUsed[i]['period'])
-        K = activityListToBeUsed[i]['values']['kills']['basic']['displayValue']
-        D = activityListToBeUsed[i]['values']['deaths']['basic']['displayValue']
-        A = activityListToBeUsed[i]['values']['assists']['basic']['displayValue']
-        KD = activityListToBeUsed[0]['values']['killsDeathsRatio']['basic']['displayValue']
-        进行时间 = activityListToBeUsed[i]['values']['activityDurationSeconds']['basic']['displayValue']
-        Score = activityListToBeUsed[i]['values']['score']['basic']['displayValue']
+    #     draw.text((86, 6+50*i), f'{模式}', font=铁骑_字体,
+    #               fill=铁骑_颜色, direction=None)
+    #     draw.text((86, 70+50*i), f'{名称} · {时间}',
+    #               font=秋天旗帜_字体, fill=秋天旗帜_颜色, direction=None)
+    #     draw.text((468, 60+50*i), f'用时：{进行时间}',
+    #               font=黑体, fill=黑色, direction=None)
+    #     draw.text((468, 30+50*i), f'{activityListToBeUsed[i]["className"]}',
+    #               font=黑体, fill=黑色, direction=None)
+    #     draw.text((640, 20+50*i), 'K/D/A', font=标题2, fill=黑色, direction=None)
+    #     draw.text((640, 60+50*i), f'{K}/{D}/{A}',
+    #               font=黑体, fill=黑色, direction=None)
+    #     draw.text((740, 20+50*i), 'Score', font=标题2, fill=黑色, direction=None)
+    #     draw.text((740, 60+50*i), f'{Score}',
+    #               font=黑体, fill=黑色, direction=None)
+    #     if 'standing' in activityListToBeUsed[i]['values']:
+    #         if activityListToBeUsed[i]['values']['standing']['basic']['displayValue'] == 'Victory':
+    #             img_raw.paste(绿块, (0, 0 + 50 * i))
+    #         else:
+    #             img_raw.paste(红块, (0, 0 + 50 * i))
+    #     else:
+    #         if activityListToBeUsed[i]['values']['completed']['basic']['displayValue'] == 'Yes':
+    #             img_raw.paste(绿块, (0, 0 + 50 * i))
+    #         else:
+    #             img_raw.paste(红块, (0, 0 + 50 * i))
 
-        draw.text((86, 6+50*i), f'{模式}', font=铁骑_字体,
-                  fill=铁骑_颜色, direction=None)
-        draw.text((86, 70+50*i), f'{名称} · {时间}',
-                  font=秋天旗帜_字体, fill=秋天旗帜_颜色, direction=None)
-        draw.text((468, 60+50*i), f'用时：{进行时间}',
-                  font=黑体, fill=黑色, direction=None)
-        draw.text((468, 30+50*i), f'{activityListToBeUsed[i]["className"]}',
-                  font=黑体, fill=黑色, direction=None)
-        draw.text((640, 20+50*i), 'K/D/A', font=标题2, fill=黑色, direction=None)
-        draw.text((640, 60+50*i), f'{K}/{D}/{A}',
-                  font=黑体, fill=黑色, direction=None)
-        draw.text((740, 20+50*i), 'Score', font=标题2, fill=黑色, direction=None)
-        draw.text((740, 60+50*i), f'{Score}',
-                  font=黑体, fill=黑色, direction=None)
-        if 'standing' in activityListToBeUsed[i]['values']:
-            if activityListToBeUsed[i]['values']['standing']['basic']['displayValue'] == 'Victory':
-                img_raw.paste(绿块, (0, 0 + 50 * i))
-            else:
-                img_raw.paste(红块, (0, 0 + 50 * i))
-        else:
-            if activityListToBeUsed[i]['values']['completed']['basic']['displayValue'] == 'Yes':
-                img_raw.paste(绿块, (0, 0 + 50 * i))
-            else:
-                img_raw.paste(红块, (0, 0 + 50 * i))
-
-    img_raw.save('02.png', 'JPEG')
+    # img_raw.save('02.png', 'JPEG')
 
 
 eloModeDict = {"control": "占领",
@@ -501,7 +475,69 @@ async def get_player_raid_info():
 
     # print(66)
 
+async def test_周常():
+    milestonesDict = await destiny.api.get_public_milestones()
+    milestonesDict = milestonesDict['Response']
+    for milestoneHash in milestonesDict:
+        # milestoneName = await destiny.api.get_public_milestone_content(milestoneHash)
+        milestoneDict = await destiny.decode_hash(milestoneHash,'DestinyMilestoneDefinition')
+        milestoneName = milestoneDict['displayProperties']['name']
+        milestoneDescription = milestoneDict['displayProperties']['description']
+        # milestoneName = await destiny.api.get_milestone_definitions(milestoneHash)
+        print(milestoneHash,milestoneName,milestoneDescription)
+
+    print(66)
+
+
+
+
+async def zhanji():
+    activityList = []
+    res = await destiny.api.get_profile(3, 4611686018497181967, [100, 200])
+    characters = res['Response']['characters']['data']
+    characterIdList = list(characters.keys())
+    for characterId in characterIdList:
+        className = classdict[characters[characterId]['classHash']]
+        activities = await destiny.api.get_activity_history(3, 4611686018497181967, characterId, 50,mode=None)
+        activities = activities['Response']['activities']
+        for i in activities:
+            i['characterId'] = characterId
+            i['className'] = className
+        activityList.extend(activities)
+        
+    activityList_order = sorted(
+        activityList, key=lambda x: x['period'], reverse=True)
+    activityListToBeUsed = activityList_order[:50]
+
+    for i in range(30):
+        activitiy = activityListToBeUsed[i]
+        res = await destiny.decode_hash(activitiy['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
+        res2 = await destiny.decode_hash(activitiy['activityDetails']['referenceId'], 'DestinyActivityDefinition')
+        modeNum = activitiy['activityDetails']['modes']
+        模式 = res['displayProperties']['name']
+        名称 = res2['displayProperties']['name']
+        时间 = get_activity_time(activitiy['period'])
+        K = activitiy['values']['kills']['basic']['displayValue']
+        D = activitiy['values']['deaths']['basic']['displayValue']
+        A = activitiy['values']['assists']['basic']['displayValue']
+        KD = activitiy['values']['killsDeathsRatio']['basic']['displayValue']
+        进行时间 = activitiy['values']['activityDurationSeconds']['basic']['displayValue']
+        Score = activitiy['values']['score']['basic']['displayValue']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(get_player_raid_info())
+loop.run_until_complete(zhanji())
 loop.close()

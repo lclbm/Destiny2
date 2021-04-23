@@ -249,7 +249,7 @@ def lookup_all(msg):
                 id = dict_temp[i]['msg']
                 绑定 += f'{name} | '
             else:
-                if dict_temp[i]['type'] in notShowList:
+                if dict_temp[i]['type'] != '自定义':
                     continue
                 if 'CQ:image' in i:
                     问答 += '[图片]:'
