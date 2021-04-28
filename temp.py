@@ -493,12 +493,13 @@ async def test_周常():
 
 async def zhanji():
     activityList = []
-    res = await destiny.api.get_profile(3, 4611686018497181967, [100, 200])
+    membershipid = 4611686018490803681
+    res = await destiny.api.get_profile(3, membershipid, [100, 200])
     characters = res['Response']['characters']['data']
     characterIdList = list(characters.keys())
     for characterId in characterIdList:
         className = classdict[characters[characterId]['classHash']]
-        activities = await destiny.api.get_activity_history(3, 4611686018497181967, characterId, 50,mode=None)
+        activities = await destiny.api.get_activity_history(3, membershipid, characterId, 50,mode=None)
         activities = activities['Response']['activities']
         for i in activities:
             i['characterId'] = characterId
@@ -509,7 +510,7 @@ async def zhanji():
         activityList, key=lambda x: x['period'], reverse=True)
     activityListToBeUsed = activityList_order[:50]
 
-    for i in range(30):
+    for i in range(50):
         activitiy = activityListToBeUsed[i]
         res = await destiny.decode_hash(activitiy['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
         res2 = await destiny.decode_hash(activitiy['activityDetails']['referenceId'], 'DestinyActivityDefinition')
@@ -527,6 +528,187 @@ async def zhanji():
 
 
 
+证章 = {
+    '木卫二收藏家': {'泰坦': 1369220652, '猎人': 2092820752, '术士': 4102170061},
+    '影临赛季': {'泰坦': 1996848060, '猎人': 582419680, '术士': 1840210717},
+    '奥斯里斯试炼：老兵门徒': {'泰坦': 3632206043, '猎人': 907398217, '术士': 3809174270},
+    '黎明赛季': {'泰坦': 605410965, '猎人': 3566355363, '术士': 587677888},
+    '不朽赛季': {'泰坦': 4107433557, '猎人': 805054563, '术士': 3083337344},
+    '月球漫游者': {'泰坦': 3304578900, '猎人': 1813275880, '术士': 1127243461},
+    '年票：丰盈赛季': {'泰坦': 4108787242, '猎人': 1481732726, '术士': 1040898483},
+    '年票：《莫测鬼牌》': {'泰坦': 2516153921, '猎人': 1521772351, '术士': 24162924},
+    '年票：《黑色军武》': {'泰坦': 272447096, '猎人': 397176300, '术士': 7761993},
+    '目的地：幽梦之城': {'泰坦': 1115203081, '猎人': 964388375, '术士': 3711698756},
+    '目的地：《遗落之族》': {'泰坦': 1003644562, '猎人': 3149147086, '术士': 437406379},
+    '目的地：《冥王诅咒》和《战争思维》': {'泰坦': 604768449, '猎人': 2180056767, '术士': 1172293868},
+    '目的地：猩红战争': {'泰坦': 1893032045, '猎人': 1080375723, '术士': 1187972104},
+    '异域：猩红战争': {'泰坦': 1875194813, '猎人': 2607543675, '术士': 2084683608},
+    '异域：《冥王诅咒》和《战争思维》': {'泰坦': 454888209, '猎人': 2283697615, '术士': 1367826044},
+    '异域：《遗落之族》': {'泰坦': 3784478466, '猎人': 3233768126, '术士': 2591952283},
+    '烈火锻造': {'泰坦': 1802049362, '猎人': 543101070, '术士': 1860141931},
+    '收藏玩家': {'泰坦': 2652561747, '猎人': 1234074769, '术士': 51250598},
+    '突袭：深岩墓室': {'泰坦': 2594170658, '猎人': 859539038, '术士': 3816074171},
+    '神圣使命': {'泰坦': 2721277575, '猎人': 278453589, '术士': 5678666},
+    '突袭：最后一愿': {'泰坦': 558738844, '猎人': 308119616, '术士': 282080253}
+}
+
+
+
+
+
+
+
+async def test():
+    res = await destiny.decode_hash(498211331,'DestinyPresentationNodeDefinition')
+    presentationNodeHashList = [Node['presentationNodeHash'] for Node in res['children']['presentationNodes']]
+    HashDict = {}
+    for NodeHash in presentationNodeHashList:
+        res = await destiny.decode_hash(NodeHash,'DestinyPresentationNodeDefinition')
+        name = res['displayProperties']['name']
+        HashDict[name] = {}
+        HashDict[name]['泰坦'] = res['children']['presentationNodes'][0]['presentationNodeHash']
+        HashDict[name]['猎人'] = res['children']['presentationNodes'][1]['presentationNodeHash']
+        HashDict[name]['术士'] = res['children']['presentationNodes'][2]['presentationNodeHash']
+    for i in HashDict.items():
+        print(i)
+    print(res)
+
+
+
+def Check_zhengzhang(info):
+    completionDict = {}
+    info_profile = info['profilePresentationNodes']['data']['nodes']
+    info_character = info['characterPresentationNodes']['data']
+
+    for name in 证章:
+        completionDict[name]={}
+        for className in 证章[name]:
+            nodeHashNum = str(证章[name][className])
+            
+            if name == '不朽赛季':
+                for characterid in info_character:
+                    characterRecords = info_character[characterid]['nodes']
+                    if nodeHashNum in characterRecords:
+                        progress = characterRecords[nodeHashNum]['objective']['progress']
+                        completionValue = characterRecords[nodeHashNum]['objective']['completionValue']
+                        completionDict[name][className] = {'progress':progress,'completionValue':completionValue}
+                        break
+
+
+                continue
+            
+            nodeHash = info_profile[nodeHashNum]
+            if 'objective' in nodeHash:
+                progress = info_profile[nodeHashNum]['objective']['progress']
+                completionValue = info_profile[nodeHashNum]['objective']['completionValue']
+            elif 'progressValue' in nodeHash:
+                progress = nodeHash['progressValue']
+                completionValue = nodeHash['completionValue']
+
+            completionDict[name][className] = {'progress':progress,'completionValue':completionValue}
+    return completionDict
+            
+
+import os
+
+证章_root = os.path.join(os.getcwd(),'res','destiny2','证章')
+标题_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+名字_证章= ImageFont.truetype('MYingHeiPRC-W7.ttf',size=36)
+数字_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=40)
+职业_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+
+
+
+
+奇数块_证章 = Image.new('RGB', [900, 160], "#292929")
+偶数块_证章 = Image.new('RGB', [900, 160], '#1F1F1F')
+镀金 = Image.new('RGB', [168, 104], '#FABC44')
+
+import numpy as np
+
+async def Check_zhengzhang_aync():
+    res = await destiny.api.get_profile(3,4611686018497181967,[700])
+    info = res['Response']
+    args = '何志武223'
+    completionDict = Check_zhengzhang(info)
+
+    证章_蓝色 = '#03A9F4'
+    证章_红色 = '#E8786E'
+    证章图 = Image.new('RGB', [900, 80+21*160], '#303030')
+    draw = ImageDraw.Draw(证章图)
+
+
+
+    draw.text((30, 20), f'小日向证章查询：{args}',
+                font=名字_证章, fill='white', direction=None)
+
+    nameList = list(completionDict.keys())
+    length = len(nameList)
+    for i in range(length):
+        name = nameList[i]
+        completion = completionDict[name]
+        print(name)
+        证章图_path = os.path.join(证章_root, f'{name}.png')
+        img = Image.open(证章图_path)
+        
+
+        
+        if i % 2 == 0:
+            证章图.paste(偶数块_证章, (0, 80+i*160))
+        else:
+            
+            证章图.paste(奇数块_证章, (0, 80+i*160))
+        draw.text((30, 10+80+i*160), f'□ {name}', font=标题_证章, fill='white', direction=None)
+        
+        # img = img.convert('RGBA')
+        # x, y = img.size # 获得长和宽
+        # for i in range(x):
+        #     for k in range(y):
+        #         color = img.getpixel((i, k))
+        #         color = color[:-1] + (150, )
+        #         img.putpixel((i, k), color)
+        # 证章图_path = os.path.join(证章_root, f'{name}__.png')
+        # img.save(证章图_path,'png')
+
+        
+
+
+        classList = ['泰坦','猎人','术士']
+        Unget = 1
+        get = 0
+        for j in range(3):
+            className = classList[j]
+            完成 = completionDict[name][className]['progress']
+            总完成 = completionDict[name][className]['completionValue']
+            if Unget and 完成==总完成:
+                Unget = 0
+            if 完成==总完成:
+                get+=1
+            
+
+
+
+            完成长度 = int(150*完成/总完成)
+            未完成长度 = 150-完成长度
+            完成块 = Image.new('RGB', [完成长度, 10], 证章_蓝色)
+            未完成块 = Image.new('RGB', [未完成长度, 10], 证章_红色)
+
+            证章图.paste(完成块, (310+j*200, 47 + 120+ 160 * i))
+            证章图.paste(未完成块, (310+j*200+完成长度, 47 +120+ 160 * i))
+            w,h = 数字_证章.getsize(f'{完成} / {总完成}')
+            draw.text((460-w+200*j, 110+ 160 * i), f'{完成} / {总完成}', font=数字_证章, fill='white', direction=None)
+            color = '#FFF36D' if 总完成== 完成 else 'white'
+            draw.text((460-42+200*j, 65+120+ 160 * i), f'{className}', font=职业_证章, fill=color, direction=None)
+        
+        if Unget:
+            a = np.array(img.convert("L"))
+            c = (100/255) *a + 80
+            img = Image.fromarray(c.astype('uint8'))
+        if get == 3:
+            证章图.paste(镀金, (28, 43+80+i*160))
+
+        证章图.paste(img, (30, 45+80+i*160))
+        
 
 
 
@@ -536,8 +718,14 @@ async def zhanji():
 
 
 
+
+
+
+    证章图.save('证章.png','png')
+    print(66)
+    
 
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(zhanji())
+loop.run_until_complete(Check_zhengzhang_aync())
 loop.close()
