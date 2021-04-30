@@ -15,17 +15,10 @@ import sys
 import re
 import time
 import numpy as np
-
-
-
-
-
 sys.path.append('C:/HoshinoBot/hoshino/modules/test')
 from data.tie import gethardlink
 from daily.report import getdailyreport
-from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索,征服者
-
-
+from data.checklist import PenguinSouvenirs, egg, 增幅, bones, cats, 称号, Exo, 暗熵碎片, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索
 
 
 
@@ -52,14 +45,6 @@ AppendInfo = ''  # '\n❗小日向将继续免费使用至18号，具体收费�
 
 sv = hoshino.Service('命运2')
 
-
-# ⚪生涯查询 [队伍码/用户名]
-# 查询玩家生涯数据
-# @sv.on_fullmatch(('功能', 'd2', 'D2', '喵内嘎', '喵内', '日向', '小日向', '喵内噶'))
-# async def D2Help(bot, ev):
-#     global count
-#     count += 1
-#     await bot.send(ev, HELP_MSG)
 
 # ⚪生涯查询 [队伍码/用户名]
 # 查询玩家生涯数据
@@ -330,7 +315,7 @@ async def GetInfo(args, components: list) -> dict:
 #         await session.send(f'{err}', at_sender=True)
 
 
-@on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
+# @on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
 async def GetPlayerpvp(session):
     try:
         hardlink = gethardlink(session)
@@ -370,7 +355,7 @@ async def GetPlayerpvp(session):
         print(msg)
         await session.send(msg, at_sender=True)
     except Exception as e:
-        await session.send(f'{e}', at_sender=True)
+        await session.send(f'{e}',at_sender=True)
 
 
 def get_drop(now, localtime):
@@ -460,7 +445,7 @@ async def GetRaidReport(membershipid):
 #         await session.send(f'{e}')
 
 
-@sv.on_fullmatch(('状态查询'))
+@sv.on_fullmatch(('echo'))
 async def D2_condition(bot, ev):
     text = "{:,}".format(count)
     msg = f'调用次数：{text}'
@@ -530,7 +515,7 @@ async def D2_condition(bot, ev):
 #         await session.send(f'{e}', at_sender=True)
 
 
-@on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
+# @on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
 async def getDataFireteam(session):
     try:
         hardlink = gethardlink(session)
@@ -576,7 +561,7 @@ def get_icon_kills(num):
         return '⚪'
 
 
-@on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
+# @on_command('击杀数据', aliases=('击杀', '击杀查询'), only_to_me=False)
 async def KillWeaponData(session):
     try:
         hardlink = gethardlink(session)
@@ -701,7 +686,7 @@ def Check_Penguin(info):
     return head
 
 
-@on_command('企鹅查询', aliases=('企鹅', '🐧'), only_to_me=False)
+# @on_command('企鹅查询', aliases=('企鹅', '🐧'), only_to_me=False)
 async def Check_Penguin_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -739,7 +724,7 @@ def Check_egg(info):
     return head, notget
 
 
-@on_command('腐化卵查询', aliases=('孵化卵', '蛋', '卵', '🥚', '腐化卵'), only_to_me=False)
+# @on_command('腐化卵查询', aliases=('孵化卵', '蛋', '卵', '🥚', '腐化卵'), only_to_me=False)
 async def Check_egg_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
@@ -795,7 +780,7 @@ def get_gambit(info):
     return msg
 
 
-@on_command('智谋', aliases=('智谋查询', '千谋'), only_to_me=False)
+# @on_command('智谋', aliases=('智谋查询', '千谋'), only_to_me=False)
 async def gambit_info(session):
     try:
         hardlink = gethardlink(session)
@@ -830,7 +815,7 @@ def Check_zengfu(info):
     return head
 
 
-@on_command('增幅', aliases=(), only_to_me=False)
+# @on_command('增幅', aliases=(), only_to_me=False)
 async def Check_zengfu_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -971,7 +956,7 @@ def Check_bones(info):
     return head, notget
 
 
-@on_command('骨头', aliases=('🦴'), only_to_me=False)
+# @on_command('骨头', aliases=('🦴'), only_to_me=False)
 async def Check_bones_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1015,7 +1000,7 @@ def Check_cats(info):
     return head
 
 
-@on_command('猫', aliases=('🐱'), only_to_me=False)
+# @on_command('猫', aliases=('🐱'), only_to_me=False)
 async def Check_cats_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1084,7 +1069,7 @@ def Check_chenghao(info):
     return head
 
 
-@on_command('称号', only_to_me=False)
+# @on_command('称号', only_to_me=False)
 async def Check_chenghao_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1119,7 +1104,7 @@ def Check_exo(info):
     return head
 
 
-@on_command('exo', aliases=('Exo', 'EXO'), only_to_me=False)
+# @on_command('exo', aliases=('Exo', 'EXO'), only_to_me=False)
 async def Check_exo_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1154,7 +1139,7 @@ def Check_suipian(info):
     return head
 
 
-@on_command('碎片', aliases=('暗熵碎片', '碎片查询', '🧩'), only_to_me=False)
+# @on_command('碎片', aliases=('暗熵碎片', '碎片查询', '🧩'), only_to_me=False)
 async def Check_suipian_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1169,6 +1154,9 @@ async def Check_suipian_aync(session):
         await session.send(head, at_sender=True)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
 
 
 def Check_saijitiaozhan(info):
@@ -1189,7 +1177,7 @@ def Check_saijitiaozhan(info):
     return head
 
 
-@on_command('赛季挑战', only_to_me=False)
+# @on_command('赛季挑战', only_to_me=False)
 async def Check_saijitiaozhan_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1230,6 +1218,7 @@ def Check_qianzhao(info):
                 if not 格力康号线索[check]:
                     msg += f'{entries[check]["name"]}：{entries[check]["location"]}\n'
 
+
     for i in 前兆['成就']:
         objectives = records[i]['intervalObjectives'][11]
         progressValue = objectives['progress']
@@ -1241,10 +1230,10 @@ def Check_qianzhao(info):
     msg += '🎉回复d2以查看其他功能'
     head = '【前兆查询】\n'
     head += msg
-    return head, notGetWeek
+    return head,notGetWeek
 
 
-@on_command('前兆', only_to_me=False)
+# @on_command('前兆', only_to_me=False)
 async def Check_qianzhao_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1254,7 +1243,7 @@ async def Check_qianzhao_aync(session):
             args = session.current_arg
         info = await GetInfo(args, [900, 104])
         args = info['profile']['data']['userInfo']['displayName']
-        res, notGetWeek = Check_qianzhao(info)
+        res,notGetWeek = Check_qianzhao(info)
         head = f'{args}\n' + res
         print(head)
         await session.send(head, at_sender=True)
@@ -1302,7 +1291,7 @@ def Check_DSC(info):
     return head
 
 
-@on_command('地窖', aliases=('深岩墓室'), only_to_me=False)
+# @on_command('地窖', aliases=('深岩墓室'), only_to_me=False)
 async def Check_DSC_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1339,7 +1328,7 @@ def Check_dianfeng(info, characterId):
     return head
 
 
-@on_command('巅峰', aliases=('巅峰球'), only_to_me=False)
+# @on_command('巅峰', aliases=('巅峰球'), only_to_me=False)
 async def Check_dianfeng_aync(session):
     try:
         hardlink = gethardlink(session)
@@ -1378,36 +1367,36 @@ def get_zongshi_icon(num):
         return '🙏'
 
 
-# def Check_zongshi(info):
-#     msg = ''
-#     info = info['profileRecords']['data']['records']
-#     for i in 宗师:
-#         objectives = info[i]['objectives'][0]
-#         progress = objectives['progress']
-#         icon = get_zongshi_icon(progress)
-#         name = 宗师[i]
-#         msg += f'{icon}{name}：{progress}次\n'
-#     msg += '🎉回复d2以查看其他功能'
-#     head = '【宗师查询】\n'
-#     head += msg
-#     return head
+def Check_zongshi(info):
+    msg = ''
+    info = info['profileRecords']['data']['records']
+    for i in 宗师:
+        objectives = info[i]['objectives'][0]
+        progress = objectives['progress']
+        icon = get_zongshi_icon(progress)
+        name = 宗师[i]
+        msg += f'{icon}{name}：{progress}次\n'
+    msg += '🎉回复d2以查看其他功能'
+    head = '【宗师查询】\n'
+    head += msg
+    return head
 
 
 # @on_command('宗师', only_to_me=False)
-# async def Check_zongshi_aync(session):
-#     try:
-#         hardlink = gethardlink(session)
-#         if hardlink:
-#             args = hardlink
-#         else:
-#             args = session.current_arg
-#         info = await GetInfo(args, [900])
-#         args = info['profile']['data']['userInfo']['displayName']
-#         res = Check_zongshi(info)
-#         head = f'{args}\n' + res
-#         await session.send(head, at_sender=True)
-#     except Exception as e:
-#         await session.send(f'获取失败，{e}', at_sender=True)
+async def Check_zongshi_aync(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [900])
+        args = info['profile']['data']['userInfo']['displayName']
+        res = Check_zongshi(info)
+        head = f'{args}\n' + res
+        await session.send(head, at_sender=True)
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
 
 
 def Check_jiling(info):
@@ -1428,7 +1417,7 @@ def Check_jiling(info):
     return head
 
 
-@on_command('机灵', aliases=('死去的机灵',), only_to_me=False)
+# @on_command('机灵', aliases=('死去的机灵',), only_to_me=False)
 async def Check_jiling_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
@@ -1463,7 +1452,7 @@ def Check_yutu(info, characterId):
     return head
 
 
-@on_command('兔子', aliases=('玉兔'), only_to_me=False)
+# @on_command('兔子', aliases=('玉兔'), only_to_me=False)
 async def Check_yutu_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
@@ -1539,7 +1528,7 @@ def Check_shengya(info):
     return msg
 
 
-@on_command('生涯', aliases=('生涯查询', '角色查询'), only_to_me=False)
+# @on_command('生涯', aliases=('生涯查询', '角色查询'), only_to_me=False)
 async def Check_shengya_aync(session: CommandSession):
     try:
         hardlink = gethardlink(session)
@@ -1586,6 +1575,9 @@ async def Check_shengya_aync(session: CommandSession):
 红块 = Image.new('RGB', [40, 100], (229, 115, 125))
 
 
+
+
+
 奇数颜色_战绩 = '#292929'
 偶数颜色_战绩 = '#1F1F1F'
 奇数块_战绩 = Image.new('RGB', [1000, 100], 奇数颜色_战绩)
@@ -1593,11 +1585,12 @@ async def Check_shengya_aync(session: CommandSession):
 
 绿色_战绩 = '#3D8D4D'
 红色_战绩 = '#8F2020'
-标题_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=20)
-KD字体_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=36)
-KD标题字体_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf', size=20)
-中字_战绩 = ImageFont.truetype('MYingHeiPRC-W5.ttf', size=16)
-小字_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf', size=16)
+标题_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+KD字体_战绩 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=36)
+KD标题字体_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf',size=20)
+中字_战绩 = ImageFont.truetype('MYingHeiPRC-W5.ttf',size=16)
+小字_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf',size=16)
+
 
 
 def get_activity_time(period):
@@ -1630,7 +1623,7 @@ async def d2_activity(session):
             args = session.current_arg
         res = await GetInfo(args, [200])
         args = res['profile']['data']['userInfo']['displayName']
-
+        
         activityList = []
         characters = res['characters']['data']
 
@@ -1649,16 +1642,20 @@ async def d2_activity(session):
         activityList_order = sorted(
             activityList, key=lambda x: x['period'], reverse=True)
         activityListToBeUsed = activityList_order[:50]
+        
+
 
         Length = len(activityListToBeUsed)
         activityRaw = Image.new('RGB', [1000, 80+Length*100], '#303030')
         draw = ImageDraw.Draw(activityRaw)
 
-        draw.text([60, 15],
-                  f'小日向战绩查询: {args}',
-                  font=KD字体_战绩,
-                  fill='white')
-
+        draw.text([60,15],
+            f'小日向战绩查询: {args}',
+            font=KD字体_战绩, 
+            fill='white')
+        
+        
+        
         for i in range(50):
             activity = activityListToBeUsed[i]
             res = await destiny.decode_hash(activity['activityDetails']['directorActivityHash'], 'DestinyActivityDefinition')
@@ -1676,44 +1673,44 @@ async def d2_activity(session):
             ScoreShow = activity['values']['score']['basic']['displayValue']
 
             teamScore = int(activity['values']['teamScore']['basic']['value'])
-            if i % 2 == 0:
-                activityRaw.paste(偶数块_战绩, [0, 80+i*100])
+            if i % 2 ==0:
+                activityRaw.paste(偶数块_战绩,[0,80+i*100])
             else:
-                activityRaw.paste(奇数块_战绩, [0, 80+i*100])
+                activityRaw.paste(奇数块_战绩,[0,80+i*100])
 
-            draw.text([60, 95+i*100],
-                      f'{模式}',
-                      font=标题_战绩,
-                      fill='white'
-                      )
+            draw.text([60,95+i*100],
+                f'{模式}',
+                font=标题_战绩, 
+                fill='white'
+                )
 
-            draw.text([60, 125+i*100],
-                      f'▢ {名称}',
-                      font=小字_战绩,
-                      fill='#E5E5E5'
-                      )
+            draw.text([60,125+i*100],
+                f'▢ {名称}',
+                font=小字_战绩, 
+                fill='#E5E5E5'
+                )
+            
+            draw.text([60,150+i*100],
+                f'▢ {时间} · 用时 {进行时间}',
+                font=小字_战绩, 
+                fill='#E5E5E5'
+                )
 
-            draw.text([60, 150+i*100],
-                      f'▢ {时间} · 用时 {进行时间}',
-                      font=小字_战绩,
-                      fill='#E5E5E5'
-                      )
+            draw.text([410,95+i*100],
+                f'K: {K}',
+                font=中字_战绩, 
+                fill='white')
 
-            draw.text([410, 95+i*100],
-                      f'K: {K}',
-                      font=中字_战绩,
-                      fill='white')
-
-            draw.text([410, 120+i*100],
-                      f'D: {D}',
-                      font=中字_战绩,
-                      fill='white'
-                      )
-            draw.text([410, 145+i*100],
-                      f'A: {A}',
-                      font=中字_战绩,
-                      fill='white'
-                      )
+            draw.text([410,120+i*100],
+                f'D: {D}',
+                font=中字_战绩, 
+                fill='white'
+                )
+            draw.text([410,145+i*100],
+                f'A: {A}',
+                font=中字_战绩, 
+                fill='white'
+                )
 
             KandD = K + D
             try:
@@ -1725,22 +1722,22 @@ async def d2_activity(session):
             KD_D = Image.new('RGB', [D长度, 10], '#E8786E')
             activityRaw.paste(KD_K, (490, 135+100*i))
             activityRaw.paste(KD_D, (490 + K长度, 135+100*i))
-            w, h = KD字体_战绩.getsize(f'{KD}')
-            draw.text([640-w, 90+i*100],
-                      f'{KD}',
-                      font=KD字体_战绩,
-                      fill='white'
-                      )
-            draw.text([490, 150+i*100],
-                      f'KD',
-                      font=KD标题字体_战绩,
-                      fill='white'
-                      )
-
+            w,h = KD字体_战绩.getsize(f'{KD}')
+            draw.text([640-w,90+i*100],
+                f'{KD}',
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([490,150+i*100],
+                f'KD',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
+            
             try:
                 if Score > teamScore:
                     teamScore = Score
-                Score长度 = int(150 * Score / teamScore)
+                Score长度 = int (150 * Score / teamScore)
             except:
                 Score长度 = 150
             其他Score长度 = 150 - Score长度
@@ -1748,38 +1745,42 @@ async def d2_activity(session):
             其他score = Image.new('RGB', [其他Score长度, 10], '#E8786E')
             activityRaw.paste(我score, (670, 135+100*i))
             activityRaw.paste(其他score, (670 + Score长度, 135+100*i))
-            w, h = KD字体_战绩.getsize(f'{ScoreShow}')
-            draw.text([820-w, 90+i*100],
-                      f'{ScoreShow}',
-                      font=KD字体_战绩,
-                      fill='white'
-                      )
-            draw.text([670, 150+i*100],
-                      f'SCORE',
-                      font=KD标题字体_战绩,
-                      fill='white'
-                      )
+            w,h = KD字体_战绩.getsize(f'{ScoreShow}')
+            draw.text([820-w,90+i*100],
+                f'{ScoreShow}',
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([670,150+i*100],
+                f'SCORE',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
+
+
+
+
 
             # draw.text([700,90+i*100],
             #     f'{Score}',
-            #     font=KD字体_战绩,
+            #     font=KD字体_战绩, 
             #     fill='white'
             #     )
             # draw.text([700,135+i*100],
             #     f'SCORE',
-            #     font=KD标题字体_战绩,
+            #     font=KD标题字体_战绩, 
             #     fill='white'
             #     )
-            draw.text([850, 90+i*100],
-                      f"{activity['className']}",
-                      font=KD字体_战绩,
-                      fill='white'
-                      )
-            draw.text([850, 135+i*100],
-                      f'CHARACTER',
-                      font=KD标题字体_战绩,
-                      fill='white'
-                      )
+            draw.text([850,90+i*100],
+                f"{activity['className']}",
+                font=KD字体_战绩, 
+                fill='white'
+                )
+            draw.text([850,135+i*100],
+                f'CHARACTER',
+                font=KD标题字体_战绩, 
+                fill='white'
+                )
 
             if activity['activityDetails']['mode'] == 6:
                 continue
@@ -1802,10 +1803,11 @@ async def d2_activity(session):
                         continue
 
                     activityRaw.paste(绿块, (0, 80 + 100 * i))
-
+   
                 else:
                     activityRaw.paste(红块, (0, 80 + 100 * i))
-
+        
+        
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'activit_{name}.png')
@@ -1813,7 +1815,7 @@ async def d2_activity(session):
         append = f'[CQ:image,file=file:///{path}]'
         await session.send(append)
     except Exception as e:
-        await session.send(f'{e}', at_sender=True)
+        await session.send(f'{e}',at_sender=True)
 
 eloModeDict = {"control": "占领",
                "iron-banner": "铁骑",
@@ -2029,11 +2031,11 @@ LOWMAN_DICT = {
 TAG_COLOR_DICT = {
     'Flawless': '#31b573',
     'Flawless Trio': '#FA576F',
-    'Flawless Duo': '#FA576F',
-    'Solo Flawless': '#FA576F',
-    'Trio': '#f4b757',
-    'Duo': '#f4b757',
-    'Solo': '#00709e',
+    'Flawless Duo':'#FA576F',
+    'Solo Flawless':'#FA576F',
+    'Trio':'#f4b757',
+    'Duo':'#f4b757',
+    'Solo':'#00709e',
 
 }
 
@@ -2442,7 +2444,7 @@ DUNGEON_APPEND_DICT = {
 }
 
 
-def append_method(state: int, typeName: str, tag_list: list):
+def append_method(state: int, typeName: str,tag_list:list):
 
     RecordRedeemed = (state & 1) > 0
     ObjectiveNotCompleted = (state & 4) > 0
@@ -2452,7 +2454,6 @@ def append_method(state: int, typeName: str, tag_list: list):
     if not ObjectiveNotCompleted:
         tag_list.append(typeName)
         return
-
 
 def dungeon_tag_append(tag_list: list, records: dict, dungeonName: str):
     if dungeonName not in DUNGEON_APPEND_DICT:
@@ -2464,12 +2465,13 @@ def dungeon_tag_append(tag_list: list, records: dict, dungeonName: str):
         characterid = list(records['characterRecords']['data'].keys())
         characterid = characterid[0]
         records = records['characterRecords']['data'][characterid]['records']
-
+    
+    
     for tag in tag_list:
         if 'Solo Flawless' in tag:
             return
 
-    for typeName, record_id in DUNGEON_APPEND_DICT[dungeonName].items():
+    for typeName,record_id in DUNGEON_APPEND_DICT[dungeonName].items():
         if typeName == 'Falwless Solo':
             state = records[record_id]['state']
             append_method(state, typeName, tag_list)
@@ -2508,6 +2510,7 @@ DUNGEON_IMAGE = {
 }
 
 
+
 @ on_command('地牢', aliases=('地牢查询'), only_to_me=False)
 async def get_player_dungeon_info(session):
     try:
@@ -2537,6 +2540,7 @@ async def get_player_dungeon_info(session):
         dungeon双榜图clears_ = Image.composite(raid双榜图_, Image.new(
             'RGB', raid双榜图_.size, TIER_COLOR[clears_tier]), raid双榜图_)
 
+
         speed_value = get_time_text(dungeon_raw_data['speedRank']['value'])
         speed_tier = dungeon_raw_data['speedRank']['tier']
         speed_subtier = dungeon_raw_data['speedRank']['subtier'] \
@@ -2546,6 +2550,7 @@ async def get_player_dungeon_info(session):
         dungeon双榜图speed_ = Image.composite(raid双榜图_, Image.new(
             'RGB', raid双榜图_.size, TIER_COLOR[speed_tier]), raid双榜图_)
 
+
         dungeon_data_dict = {}
         for i in dungeon_raw_data['activities']:
             await add_dungeon_data_dict(dungeon_data_dict, i)
@@ -2553,7 +2558,7 @@ async def get_player_dungeon_info(session):
         dungeon_dictkeys_to_list = list(dungeon_data_dict.keys())
         dungeon_dict_length = len(dungeon_data_dict)
         img_dungeon = Image.new(
-            'RGB', [700, 120 + dungeon_dict_length * 120], '#303030')
+            'RGB', [700, 120 + dungeon_dict_length* 120], '#303030')
         draw = ImageDraw.Draw(img_dungeon)
         draw.text([40, 20], f'小日向地牢查询', '#CCCCCC', _深岩墓室)
         draw.text([40, 65], f'{args}', 'white', _深岩墓室)
@@ -2569,6 +2574,7 @@ async def get_player_dungeon_info(session):
         draw.text([540, 27], f'Speed Rank', 'white', _FlawlessDuo)
         draw.text([540, 50], f'{speed_tier} {speed_subtier}', 'white', _段位文字)
         draw.text([540, 75], f'{speed_value}', 'white', _FlawlessDuo)
+
 
         i = 0
         for dungenonName in DUNGEON_NAEM_LIST:
@@ -2651,7 +2657,9 @@ async def get_player_dungeon_info(session):
         await session.send(f'{append}', at_sender=False)
 
     except Exception as e:
-        await session.send(f'{e}', at_sender=True)
+        await session.send(f'{e}',at_sender=True)
+
+
 
 
 def Check_zhengzhang(info):
@@ -2660,22 +2668,22 @@ def Check_zhengzhang(info):
     info_character = info['characterPresentationNodes']['data']
 
     for name in 证章:
-        completionDict[name] = {}
+        completionDict[name]={}
         for className in 证章[name]:
             nodeHashNum = str(证章[name][className])
-
+            
             if name == '不朽赛季':
                 for characterid in info_character:
                     characterRecords = info_character[characterid]['nodes']
                     if nodeHashNum in characterRecords:
                         progress = characterRecords[nodeHashNum]['objective']['progress']
                         completionValue = characterRecords[nodeHashNum]['objective']['completionValue']
-                        completionDict[name][className] = {
-                            'progress': progress, 'completionValue': completionValue}
+                        completionDict[name][className] = {'progress':progress,'completionValue':completionValue}
                         break
 
-                continue
 
+                continue
+            
             nodeHash = info_profile[nodeHashNum]
             if 'objective' in nodeHash:
                 progress = info_profile[nodeHashNum]['objective']['progress']
@@ -2684,16 +2692,18 @@ def Check_zhengzhang(info):
                 progress = nodeHash['progressValue']
                 completionValue = nodeHash['completionValue']
 
-            completionDict[name][className] = {
-                'progress': progress, 'completionValue': completionValue}
+            completionDict[name][className] = {'progress':progress,'completionValue':completionValue}
     return completionDict
+            
 
 
-证章_root = os.path.join(os.getcwd(), 'res', 'destiny2', '证章')
-标题_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=20)
-名字_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=36)
-数字_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=40)
-职业_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=20)
+证章_root = os.path.join(os.getcwd(),'res','destiny2','证章')
+标题_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+名字_证章= ImageFont.truetype('MYingHeiPRC-W7.ttf',size=36)
+数字_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=40)
+职业_证章 = ImageFont.truetype('MYingHeiPRC-W7.ttf',size=20)
+
+
 
 
 奇数块_证章 = Image.new('RGB', [900, 160], "#292929")
@@ -2717,8 +2727,10 @@ async def Check_zhengzhang_aync(session):
         证章图 = Image.new('RGB', [900, 80+21*160], '#303030')
         draw = ImageDraw.Draw(证章图)
 
+
+
         draw.text((40, 20), f'小日向证章查询：{args}',
-                  font=名字_证章, fill='white', direction=None)
+                    font=名字_证章, fill='white', direction=None)
 
         nameList = list(completionDict.keys())
         length = len(nameList)
@@ -2727,15 +2739,16 @@ async def Check_zhengzhang_aync(session):
             completion = completionDict[name]
             证章图_path = os.path.join(证章_root, f'{name}.png')
             img = Image.open(证章图_path)
+            
 
+            
             if i % 2 == 0:
                 证章图.paste(偶数块_证章, (0, 80+i*160))
             else:
-
+                
                 证章图.paste(奇数块_证章, (0, 80+i*160))
-            draw.text((40, 10+80+i*160),
-                      f'□ {name}', font=标题_证章, fill='white', direction=None)
-
+            draw.text((40, 10+80+i*160), f'□ {name}', font=标题_证章, fill='white', direction=None)
+            
             # img = img.convert('RGBA')
             # x, y = img.size # 获得长和宽
             # for i in range(x):
@@ -2746,41 +2759,43 @@ async def Check_zhengzhang_aync(session):
             # 证章图_path = os.path.join(证章_root, f'{name}__.png')
             # img.save(证章图_path,'png')
 
-            classList = ['泰坦', '猎人', '术士']
+            
+
+
+            classList = ['泰坦','猎人','术士']
             Unget = 1
             get = 0
             for j in range(3):
                 className = classList[j]
                 完成 = completionDict[name][className]['progress']
                 总完成 = completionDict[name][className]['completionValue']
-                if Unget and 完成 == 总完成:
+                if Unget and 完成==总完成:
                     Unget = 0
-                if 完成 == 总完成:
-                    get += 1
+                if 完成==总完成:
+                    get+=1
+                
 
                 完成长度 = int(150*完成/总完成)
                 未完成长度 = 150-完成长度
                 完成块 = Image.new('RGB', [完成长度, 10], 证章_蓝色)
                 未完成块 = Image.new('RGB', [未完成长度, 10], 证章_红色)
 
-                证章图.paste(完成块, (310+j*200, 47 + 120 + 160 * i))
-                证章图.paste(未完成块, (310+j*200+完成长度, 47 + 120 + 160 * i))
-                w, h = 数字_证章.getsize(f'{完成} / {总完成}')
-                draw.text((460-w+200*j, 110 + 160 * i),
-                          f'{完成} / {总完成}', font=数字_证章, fill='white', direction=None)
-                color = '#FFF36D' if 总完成 == 完成 else 'white'
-                draw.text((460-42+200*j, 65+120 + 160 * i),
-                          f'{className}', font=职业_证章, fill=color, direction=None)
-
+                证章图.paste(完成块, (310+j*200, 47 + 120+ 160 * i))
+                证章图.paste(未完成块, (310+j*200+完成长度, 47 +120+ 160 * i))
+                w,h = 数字_证章.getsize(f'{完成} / {总完成}')
+                draw.text((460-w+200*j, 110+ 160 * i), f'{完成} / {总完成}', font=数字_证章, fill='white', direction=None)
+                color = '#FFF36D' if 总完成== 完成 else 'white'
+                draw.text((460-42+200*j, 65+120+ 160 * i), f'{className}', font=职业_证章, fill=color, direction=None)
+            
             if Unget:
                 a = np.array(img.convert("L"))
-                c = (100/255) * a + 80
+                c = (100/255) *a + 80
                 img = Image.fromarray(c.astype('uint8'))
             if get == 3:
                 证章图.paste(镀金, (38, 43+80+i*160))
 
             证章图.paste(img, (40, 45+80+i*160))
-
+        
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'证章_{name}.png')
@@ -2788,256 +2803,16 @@ async def Check_zhengzhang_aync(session):
         append = f'[CQ:image,file=file:///{path}]'
         await session.send(f'{append}', at_sender=False)
 
-    except Exception as e:
-        await session.send(f'获取失败，{e}', at_sender=True)
 
 
-def Check_zongshi(info):
-    zsCompletionDict = {}
-    recordCompletionDict = {}
 
-    profileRecords = info['profileRecords']['data']['records']
-    characterRecords = info['characterRecords']['data']
 
-    for seasonName in 宗师:
-        zsCompletionDict[seasonName] = {}
-        for hashId in 宗师[seasonName]:
-            progress = profileRecords[hashId]['objectives'][0]['progress']
-            hashName = 宗师[seasonName][hashId]
-            zsCompletionDict[seasonName][hashName] = progress
 
-    for hashName in 征服者:
-        hashId = 征服者[hashName]
-        progress = profileRecords[hashId]['objectives'][0]['progress']
-        completionValue = profileRecords[hashId]['objectives'][0]['completionValue']
-        recordCompletionDict[hashName] = {
-            'progress': progress, 'completionValue': completionValue}
 
-    return zsCompletionDict, recordCompletionDict
 
 
 
 
 
-# 地图_root = os.path.join(os.getcwd(), 'res', 'destiny2', '征服者')
-# 完成_宗师 = Image.new('RGB', [12, 12], '#73B17D')
-# 标题_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=24)
-# 名字_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=36)
-# 数字_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=60)
-# 进度条字体_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=22)
-# 宗师_蓝色 = '#03A9F4'
-# 宗师_红色 = '#E8786E'
-
-# 征服者图片_path = os.path.join(地图_root, '征服者.png')
-# 征服者未完成图片_path = os.path.join(地图_root, '征服者_未完成.png')
-# 征服者镀金_path = os.path.join(地图_root, '征服者_镀金.png')
-# 征服者进度条_path = os.path.join(地图_root, '进度条.png')
-
-
-# 征服者图片 = Image.open(征服者图片_path)
-# 征服者未完成图片 = Image.open(征服者未完成图片_path)
-# 征服者镀金 = Image.open(征服者镀金_path)
-# 征服者进度条 = Image.open(征服者进度条_path)
-
-# 征服者图片 = 征服者图片.resize((140, 159), Image.ANTIALIAS)
-# 征服者未完成图片 = 征服者未完成图片.resize((140, 159), Image.ANTIALIAS)
-# 征服者镀金 = 征服者镀金.resize((140, 159), Image.ANTIALIAS)
-
-# 征服者图片 = Image.composite(征服者图片, Image.new(
-#     'RGB', 征服者图片.size, '#303030'), 征服者图片)
-# 征服者未完成图片 = Image.composite(征服者未完成图片, Image.new(
-#     'RGB', 征服者未完成图片.size, '#303030'), 征服者未完成图片)
-# 征服者镀金 = Image.composite(征服者镀金, Image.new(
-#     'RGB', 征服者镀金.size, '#303030'), 征服者镀金)
-# 征服者进度条 = Image.composite(征服者进度条, Image.new(
-#     'RGB', 征服者进度条.size, '#303030'), 征服者进度条)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-地图_root = os.path.join(os.getcwd(), 'res', 'destiny2', '征服者')
-完成_宗师 = Image.new('RGB', [12, 12], '#73B17D')
-标题_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=24)
-名字_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=36)
-数字_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=60)
-进度条字体_宗师 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=22)
-宗师_蓝色 = '#03A9F4'
-宗师_红色 = '#E8786E'
-
-征服者图片_path = os.path.join(地图_root, '征服者.png')
-征服者未完成图片_path = os.path.join(地图_root, '征服者_未完成.png')
-征服者镀金_path = os.path.join(地图_root, '征服者_镀金.png')
-征服者进度条_path = os.path.join(地图_root, '进度条.png')
-
-
-征服者图片 = Image.open(征服者图片_path)
-征服者未完成图片 = Image.open(征服者未完成图片_path)
-征服者镀金 = Image.open(征服者镀金_path)
-征服者进度条 = Image.open(征服者进度条_path)
-
-征服者图片 = 征服者图片.resize((140, 159), Image.ANTIALIAS)
-征服者未完成图片 = 征服者未完成图片.resize((140, 159), Image.ANTIALIAS)
-征服者镀金 = 征服者镀金.resize((140, 159), Image.ANTIALIAS)
-
-征服者图片 = Image.composite(征服者图片, Image.new(
-    'RGB', 征服者图片.size, '#303030'), 征服者图片)
-征服者未完成图片 = Image.composite(征服者未完成图片, Image.new(
-    'RGB', 征服者未完成图片.size, '#303030'), 征服者未完成图片)
-征服者镀金 = Image.composite(征服者镀金, Image.new(
-    'RGB', 征服者镀金.size, '#303030'), 征服者镀金)
-征服者进度条 = Image.composite(征服者进度条, Image.new(
-    'RGB', 征服者进度条.size, '#303030'), 征服者进度条)
-
-
-@on_command('宗师', only_to_me=False)
-async def Check_zongshi_aync(session):
-    try:
-        hardlink = gethardlink(session)
-        if hardlink:
-            args = hardlink
-        else:
-            args = session.current_arg
-        info = await GetInfo(args, [900])
-        args = info['profile']['data']['userInfo']['displayName']
-
-        宗师, 征服者 = Check_zongshi(info)
-
-        imageRaw = Image.new('RGB', [1830, 1480], '#303030')
-        draw = ImageDraw.Draw(imageRaw)
-
-        draw.text((30, 20), f'小日向宗师查询: {args}',
-                  font=名字_宗师, fill='white', direction=None)
-
-        i, j = 0, 0
-
-        镀金 = Image.new('RGB', [266, 106], '#ffe06d')
-
-        for 赛季 in 宗师:
-            count = 0
-            for value in 宗师[赛季].values():
-                count += value
-
-            赛季_path = os.path.join(地图_root, f'{赛季}.png')
-
-            赛季图 = Image.open(赛季_path)
-            赛季图 = Image.composite(赛季图, Image.new(
-                'RGB', 赛季图.size, '#303030'), 赛季图)
-            imageRaw.paste(赛季图, (20, 100+330*i))
-
-            draw.text((85, 100+330*i), f'{赛季}:  {count}次',
-                      font=名字_宗师, fill='white', direction=None)
-
-            for 图 in 宗师[赛季]:
-                地图_path = os.path.join(地图_root, f'{图}.png')
-                地图 = Image.open(地图_path)
-                # 地图 = Image.composite(地图, Image.new(
-                #     'RGB', 地图.size, '#303030'), 地图)
-                # 灰色
-
-                draw.text((25+300*j, 30+130+330*i),
-                          f'▢ {图}', font=标题_宗师, fill='white', direction=None)
-
-                完成次数 = 宗师[赛季][图]
-                if 完成次数 > 0:
-                    imageRaw.paste(完成_宗师, (31+300*j, 39+130+330*i))
-                else:
-                    a = np.array(地图.convert("L"))
-                    c = (100/255) * a + 80
-                    地图 = Image.fromarray(c.astype('uint8'))
-
-                if 完成次数 >= 10:
-                    imageRaw.paste(镀金, [27+300*j, 67+130+330*i])
-
-                imageRaw.paste(地图, [30+300*j, 70+130+330*i])
-                x, y = 数字_宗师.getsize(f'{完成次数}')
-                draw.text([30+260+300*j-x, 100+70+130+330*i+3], f'{完成次数}',
-                          font=数字_宗师, fill='white', direction=None)
-                可用长度 = 260
-                try:
-                    完成长度 = int(完成次数 / count * 可用长度)
-                except:
-                    完成长度 = 0
-                完成块 = Image.new('RGB', [完成长度, 10], 宗师_蓝色)
-                剩余块 = Image.new('RGB', [可用长度-完成长度, 10], 'white')
-                imageRaw.paste(完成块, [30+300*j, 5+240+130+330*i])
-                imageRaw.paste(剩余块, [30+300*j+完成长度, 5+240+130+330*i])
-                draw.text([30+300*j, 240+130+330*i-35+3], f'完成次数',
-                          font=标题_宗师, fill='white', direction=None)
-
-                j += 1
-
-            i += 1
-            j = 0
-
-        i = 0
-        for 赛季 in 征服者:
-            completionValue = 征服者[赛季]['completionValue']
-            progress = 征服者[赛季]['progress']
-
-            图片 = 征服者图片
-            颜色 = '#732881'
-
-            
-
-            
-
-            if progress < completionValue:
-                图片 = 征服者未完成图片
-                颜色 = '#989899'
-
-            if 赛季 == '天选赛季' and progress > 4:
-                completionValue = 10
-                图片 = 征服者图片
-                颜色 = '#732881'
-
-            if progress == 10:
-                图片 = 征服者镀金
-                颜色 = '#EDB25E'
-                completionValue = progress
-
-            
-            填充长度 = int(400 * progress / completionValue)
-
-            if 填充长度 < 4:
-                填充长度 = 4
-            填充块 = Image.new('RGB', [填充长度-4, 26], 颜色)
-
-            imageRaw.paste(图片, [30, 770+i*170])
-            imageRaw.paste(征服者进度条, [30+170, 840+i*170])
-            imageRaw.paste(填充块, [30+170+2, 840+i*170+2])
-            msg = f'{progress} / {completionValue}'
-            x, y = 进度条字体_宗师.getsize(msg)
-
-            draw.text([30+170+400-x-10, 840+i*170], msg,
-                      font=进度条字体_宗师, fill='white', direction=None)
-
-            draw.text([30+170, 20+780+i*170], f'{赛季} 征服者',
-                      font=标题_宗师, fill='white', direction=None)
-
-            i += 1
-
-        name = time.time()
-        path = os.path.join(os.getcwd(), 'res', 'destiny2',
-                            'cache', f'宗师_{name}.png')
-        imageRaw.save(path, 'png')
-        append = f'[CQ:image,file=file:///{path}]'
-        await session.send(f'{append}', at_sender=False)
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
