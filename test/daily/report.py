@@ -77,6 +77,8 @@ async def getdailyreport():
     img_file = os.path.join(png_folder,file_name)
     if need_to_update():
         await update()
+        if not os.path.exists(img_file):
+            raise Exception('日报获取失败，日报服务器的日报url已过期')
         return 0
     else:
         return file_name

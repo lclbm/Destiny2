@@ -9,6 +9,12 @@ root = os.getcwd()
 root = os.path.join(root, 'res', 'destiny2', 'reply')
 user_root = os.path.join(root, 'user')
 group_root = os.path.join(root, 'group')
+authorizedUserList = {}
+
+
+
+
+
 
 
 def read_json(file):
@@ -25,6 +31,40 @@ def write_json(dict_temp, path):
     with open(path, 'w', encoding='utf-8') as f:
         # 设置不转换成ascii  json字符串首缩进
         f.write(json.dumps(dict_temp, ensure_ascii=False, indent=2))
+
+
+
+authorizedUserListPath = os.path.join(root, '词库授权.json')
+authorizedUserList = read_json(authorizedUserListPath)
+print(authorizedUserList)
+
+def addAuthorizedUser(userId):
+    if 'useAuthorized' not in authorizedUserList:
+        authorizedUserList['useAuthorized'] = {}
+
+    if userId in authorizedUserList['useAuthorized']:
+        del authorizedUserList['useAuthorized'][userId]
+        write_json(authorizedUserList,authorizedUserListPath)
+        return 0
+        
+    authorizedUserList['useAuthorized'][userId] = {'count':0,'QA':[]}
+    write_json(authorizedUserList,authorizedUserListPath)
+    return 1
+
+
+def addUsersAuthorized(userId):
+    if 'addUsersAuthorized' not in authorizedUserList:
+        authorizedUserList['addUsersAuthorized'] = []
+
+    if userId in authorizedUserList['addUsersAuthorized']:
+        authorizedUserList['addUsersAuthorized'].remove(userId)
+        write_json(authorizedUserList,authorizedUserListPath)
+        return 0
+    else:
+        authorizedUserList['addUsersAuthorized'].append(userId)
+        write_json(authorizedUserList,authorizedUserListPath)
+        return 1
+
 
 
 def download_img(imgurl, name, mode):
@@ -46,6 +86,10 @@ def add_reply(msg):
     raw_message = msg['raw_message']
     message = msg['message']
     user_id = msg['user_id']
+
+    if str(user_id) not in authorizedUserList['useAuthorized']:
+        raise Exception('你还没有添加词库的权限，请加入小日向交流群联系开发者获得词库授权。')
+
     group_id = msg['group_id']
     raw_message = raw_message.replace('\r', r'\r')
     raw_message = raw_message.replace('\n', r'\n')
@@ -86,6 +130,9 @@ def add_reply(msg):
         dict_temp[question] = {'type': '自定义', 'msg': [answer]}
         length = 1
     write_json(dict_temp, file)
+    authorizedUserList['useAuthorized'][str(user_id)]['count'] += 1
+    authorizedUserList['useAuthorized'][str(user_id)]['QA'].append({'Q':question,'A':answer})
+    write_json(authorizedUserList,authorizedUserListPath)
     return(f'🎉词库添加成功，当前问题下有[{length}]个回答')
 
 
@@ -414,7 +461,7 @@ def tie_urself(msg):
     res = re.match(
         r'绑定 *(7656\d{13}).*', raw_message)
     if not res:
-        raise Exception('格式错误，请输入绑定帮助以查看相关教程')
+        raise Exception('格式错误，队伍码格式为以7656开头的17位纯数字')
     file = os.path.join(user_root, f'{user_id}.json')
     dict_temp = {}
     if os.path.exists(file):  # 如果文件存在的话

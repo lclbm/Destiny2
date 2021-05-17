@@ -13,6 +13,16 @@ import json
 购买记录_path = os.path.join(os.getcwd(), 'res', 'destiny2', '购买记录.json')
 
 
+
+one = 2287326985
+two = 2933986918
+messageGroup = 827529117
+
+# one = 1281357456
+# two = 2933986918
+# messageGroup = 766202127
+
+
 def write_json():
     global 购买记录
     with open(购买记录_path, 'w', encoding='utf-8') as f:
@@ -33,7 +43,6 @@ def read_json():
 
 
 read_json()
-print(购买记录)
 
 
 sv = Service('群组')
@@ -43,7 +52,7 @@ sv = Service('群组')
 # async def handle_group_message(bot, event: aiocqhttp.Event):
 #     print(event)
 #     if event.raw_message == '测试测试':
-#         await bot.send_group_msg(self_id=event.self_id, group_id=827529117, message=绑定帮助)
+#         await bot.send_group_msg(self_id=event.self_id, group_id=messageGroup, message=绑定帮助)
 
 
 group_list = {}
@@ -62,7 +71,8 @@ group_add = {}
 @on_request('group.add')
 async def handle_group_add(session: RequestSession):
     ev = session.event
-    if ev.group_id != 827529117:
+    
+    if ev.group_id != messageGroup:
         return None
     user_id = ev.user_id
     try:
@@ -77,13 +87,18 @@ async def handle_group_add(session: RequestSession):
 @on_notice('group_increase')
 async def group_member_add(session: NoticeSession):
     ev = session.event
+    print(ev)
     user_id = ev.user_id
+    self_id = ev.self_id
     at = MessageSegment.at(user_id)
     try:
-        if user_id == ev.self_id:
-            await session.send(f'米娜桑大家好，我是何志武223开发的小日向机器人，回复d2可以看看我有什么功能噢🤞')
-        else:
-            await session.send(f'{at}，欢迎新噶点吼，我是群内的小日向机器人，回复d2可以看看我有什么功能噢🤞')
+        #1号机进了2号机的群
+        if self_id == two and user_id == one:
+            await session.bot.set_group_leave(self_id=one,group_id=ev.group_id)
+        #2号机进了1号机的群
+        if self_id == one and user_id == two:
+            await session.bot.set_group_leave(self_id=two,group_id=ev.group_id)
+
     except:
         pass
 
@@ -92,6 +107,9 @@ async def group_member_add(session: NoticeSession):
 async def handle_group_invite(session: RequestSession):
     print('收到邀请收到邀请收到邀请收到邀请收到邀请')
     ev = session.event
+    # if ev.self_id == one:
+    #     return None
+    print(ev)
     try:
         try:
             group_info = await session.bot.get_group_info(group_id=ev.group_id, self_id=ev.self_id)
@@ -106,28 +124,46 @@ async def handle_group_invite(session: RequestSession):
         group_list[ev.group_id] = {'flag': f'{ev.flag}',
                                    'sub_type': f'{ev.sub_type}',
                                    'group_name': f'{group_name}',
-                                   'user_id': f'{ev.user_id}'
+                                   'user_id': f'{ev.user_id}',
+                                   'self_id':f'{ev.self_id}'
                                    }
         # comment = ev.comment
         length = len(group_list)
+        print(ev)
 
-        await session.bot.send_group_msg(self_id=ev.self_id, group_id=827529117,
-                                         message=f'{at}\n👉收到1条群组请求\n群号：{ev.group_id}\n群名：{group_name}\n方式：{ev.sub_type}\n邀请人：{at2}\n目前剩余{length}条请求未处理')
+        # if ev.self_id == one:
+        #     print('enterif')    
+        #     await session.bot.send_group_msg(self_id=ev.self_id, group_id=messageGroup,
+        #                                     message=f'{at2}目前1号机已经满额啦，请尝试拉2号机哈\n❗群号：{group_id}\n❗群名：{group_name}\n')
+        #     print('通知发送成功')
+
+        #     await session.bot.set_group_add_request(flag=ev.flag, sub_type=ev.sub_type, approve=False, reason='请邀请小日向2号机')
+        #     print('拒绝成功')
+
+        #     del group_list[int(group_id)]
+        #     return None
+        # else:
+        await session.bot.send_group_msg(self_id=ev.self_id, group_id=messageGroup,
+                                         message=f'{at}\n👉收到1条群组请求\n群号：{ev.group_id}\n群名：{group_name}\n方式：{ev.sub_type}\n邀请人：{at2}\n目前剩余{length}条请求未处理\n如果该请求未自动同意请看群公告哈')
+        
         group_id = str(ev.group_id)
         if group_id in 购买记录 and 购买记录[group_id]['days'] >= 0:
             print('Test')
+            
             try:
-                await session.bot.set_group_add_request(flag=ev.flag, sub_type=ev.sub_type)
+                
+                await session.bot.set_group_add_request(self_id=ev.self_id,flag=ev.flag, sub_type=ev.sub_type,approve=True)
                 await asyncio.sleep(1)
                 print('邀请成功邀请成功邀请成功邀请成功邀请成功邀请成功')
-                await session.bot.send_group_msg(self_id=ev.self_id, group_id=827529117,
+                await session.bot.send_group_msg(self_id=ev.self_id, group_id=messageGroup,
                                                  message=f'{at2}该群已授权，已自动同意\n✅群号：{group_id}\n✅群名：{group_name}')
                 del group_list[int(group_id)]
                 return None
             except Exception as err:
-                await session.bot.send_group_msg(self_id=ev.self_id, group_id=827529117,
+                await session.bot.send_group_msg(self_id=ev.self_id, group_id=messageGroup,
                                                  message=f'{at2}该群已授权，自动同意失败，可以再邀请我试试哦\n❗群号：{group_id}\n❗群名：{group_name}\n{err}')
                 del group_list[int(group_id)]
+            
 
         # await session.bot.send_private_msg(self_id=ev.self_id, user_id=614867321,
         #                                    message=f'收到group_request\n{comment}\n剩余{length}条请求未处理')
@@ -137,7 +173,7 @@ async def handle_group_invite(session: RequestSession):
         # nickname = user_info['nickname']
 
     except Exception as e:
-        await session.bot.send_group_msg(self_id=ev.self_id, group_id=827529117,
+        await session.bot.send_group_msg(self_id=ev.self_id, group_id=messageGroup,
                                          message=f'{at}\n👉收到1条群组请求\n❗异常：{e}\n群号：{ev.group_id}\n')
 
 
@@ -165,6 +201,8 @@ async def quit_group(session: CommandSession):
 async def chuli(session: CommandSession):
     try:
         ev = session.event
+        if ev.self_id == one:
+            return None
         if ev.user_id != 614867321:
             raise Exception('只有管理员才有权限处理加群')
         if session.current_arg:
@@ -174,31 +212,21 @@ async def chuli(session: CommandSession):
             flag = group_list[group_id]['flag']
             sub_type = group_list[group_id]['sub_type']
             group_name = group_list[group_id]['group_name']
+            self_id = group_list[group_id]['self_id']
             comment = res.group(3)
             at2 = MessageSegment.at(group_list[group_id]['user_id'])
             del group_list[group_id]
             try:
                 if approve:
-                    await session.bot.set_group_add_request(flag=flag, sub_type=sub_type, approve=approve)
+                    await session.bot.set_group_add_request(self_id=self_id,flag=flag, sub_type=sub_type, approve=approve)
                     await session.send(f'{at2}已同意\n✅群号：{group_id}\n✅群名：{group_name}')
                 else:
-                    await session.bot.set_group_add_request(flag=flag, sub_type=sub_type, approve=approve, reason=comment)
+                    await session.bot.set_group_add_request(self_id=self_id,flag=flag, sub_type=sub_type, approve=approve, reason=comment)
                     await session.send(f'{at2}已拒绝\n❌群号：{group_id}\n❌群名：{group_name}\n拒绝理由：{comment}')
 
             except Exception as e:
-                await session.send(f'处理失败\n❗群号：{group_id}\n❗群名：{group_name}\n{e}')
+                await session.bot.send_group_msg(group_id=messageGroup,message=f'处理失败\n❗群号：{group_id}\n❗群名：{group_name}\n{e}',self_id=self_id)
         else:
-            for key, value in group_list.items():
-                await asyncio.sleep(1)
-                flag = value['flag']
-                sub_type = value['sub_type']
-                group_name = value['group_name']
-                at2 = MessageSegment.at(value['user_id'])
-                try:
-                    await session.bot.set_group_add_request(flag=flag, sub_type=sub_type, approve=True)
-                    await session.send(f'{at2}已同意\n✅群号：{key}\n✅群名：{group_name}')
-                except Exception as e:
-                    await session.send(f'{at2}处理失败\n❗群号：{key}\n❗群名：{group_name}\n{e}')
             group_list.clear()
     except Exception as e:
         await session.send(f'{e}')
@@ -247,6 +275,8 @@ async def group_poke_me(session: NoticeSession):
 async def shouquan(session: CommandSession):
     try:
         ev = session.event
+        if ev.self_id == one:
+            return None
         if session.current_arg:
             if (res := re.match(r'(\d+) (\d+) ([0123])', session.current_arg)):
                 group_id = str(res.group(1))
@@ -268,13 +298,15 @@ async def shouquan(session: CommandSession):
                     if group_id in 购买记录 and 购买记录[group_id]['days'] >= 0:
                         flag = value['flag']
                         sub_type = value['sub_type']
+                        self_id = value['self_id']
                         group_name = value['group_name']
                         at2 = MessageSegment.at(value['user_id'])
                         try:
-                            await session.bot.set_group_add_request(flag=flag, sub_type=sub_type, approve=True)
-                            await session.send(f'{at2}\n检测到该群的授权，已自动同意\n✅群号：{group_id}\n✅群名：{group_name}')
+                            await session.bot.set_group_add_request(self_id=self_id,flag=flag, sub_type=sub_type, approve=True)
+                            await session.bot.send_group_msg(self_id=self_id, group_id=messageGroup, message=f'{at2}\n检测到该群的授权，已自动同意\n✅群号：{group_id}\n✅群名：{group_name}')
+                    
                         except Exception as e:
-                            await session.send(f'{at2}\n检测到该群的授权，自动同意失败\n❗群号：{group_id}\n❗群名：{group_name}\n{e}')
+                            await session.bot.send_group_msg(self_id=self_id, group_id=messageGroup, message=f'{at2}\n检测到该群的授权，自动同意失败\n❗群号：{group_id}\n❗群名：{group_name}\n{e}')
                         readyToDelete.append(int(group_id))
                 for group_id in readyToDelete:
                     del group_list[int(group_id)]
