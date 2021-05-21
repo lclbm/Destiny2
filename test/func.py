@@ -17,7 +17,6 @@ import time
 import numpy as np
 
 
-
 sys.path.append(os.path.join(os.getcwd(),'hoshino','modules','test'))
 from data.tie import gethardlink
 from daily.report import getdailyreport
@@ -3172,6 +3171,8 @@ medalsNameToImgDict = {
 
 @on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
 async def Check_pvp_aync(session:CommandSession):
+    if session.event.user_id != 3555747646:
+        return
     try:
         hardlink = gethardlink(session)
         if hardlink:
@@ -3247,7 +3248,8 @@ async def Check_pvp_aync(session:CommandSession):
 
                             referenceId = weaponData['referenceId']
                             weaponInfo = await destiny.decode_hash(referenceId, 'DestinyInventoryItemDefinition')
-                            weaponName = weaponInfo['displayProperties']['name']
+                            weaponName:str = weaponInfo['displayProperties']['name']
+                            weaponName.replace('/','')
                             weaponIconPath = os.path.join(
                                 weaponIconDirPath, f'{weaponName}.png')
 
@@ -5088,3 +5090,249 @@ async def Check_dianfeng_aync2(session):
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)
 
+
+
+@on_command('生涯', aliases=('生涯查询', '角色查询'), only_to_me=False)
+async def Check_shengya_aync2(session: CommandSession):
+    if session.event.user_id != 3555747646:
+        return
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,900])
+        membershipId = info['membershipid']
+        membershipType = info['membershiptype_num']
+
+        args = info['profile']['data']['userInfo']['displayName']
+        records = info['profileRecords']['data']['records']
+        args = args[:12]
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+
+        IMAGEX = 1000
+        IMAGEY = 2050
+        imageRaw = Image.new(
+            'RGB', [IMAGEX, IMAGEY], '#303030')
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        # 奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        # 偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+
+        # classNameDict = []
+        # for characterId in characterDict:
+        #     classNameDict.append(
+        #         classdict[characterDict[characterId]['classHash']])
+
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1, y1 = 玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_records(records)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2, y2 = 声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x, y = 声明_智谋.getsize('小日向生涯数据查询')
+        draw.text([524-x, 116-y], '小日向生涯数据查询',
+                font=声明_智谋, fill='white', direction=None)
+
+        msg = f'小日向生涯数据查询'
+        x, y = 玩家名字_智谋.getsize(msg)
+        x = 524+int((IMAGEX-524-x)/2)
+        y = 20+int((96-y)/2)
+        draw.text([x, y], msg,
+                font=玩家名字_智谋, fill='white', direction=None)
+        await session.send('开始获取玩家生涯数据，可能需要花费1分钟左右的时间，请耐心等待。',at_sender=True)
+        shengyaData = await get_shengya_data(info['profileRecords'], info['profile'], info['characters']['data'],membershipType,membershipId)
+        basicData = shengyaData[0]
+        yearsDict = shengyaData[1]
+        activitiesTime = shengyaData[2]
+        characterTimeDict = shengyaData[3]
+
+
+        tempY = 200
+        for yearName in seasonsAndYearsDict:
+            tempX = 50
+
+            seasonsDict = seasonsAndYearsDict[yearName]
+            seasonsDictToCheck = yearsDict[yearName]
+            for seasonHash in seasonsDict:
+                seasonName = seasonsDict[seasonHash]
+                seasonIconPath = os.path.join(destiny2DirPath, '赛季图',f'{seasonName}.png')
+                seasonIcon = Image.open(seasonIconPath).resize((200, 100), Image.ANTIALIAS)
+
+                # 有这个赛季
+                if seasonsDictToCheck[seasonName]:
+                    fontColor = 'white'
+                else:
+                    seasonIcon = get_grey_img(seasonIcon)
+                    fontColor = '#525252'
+
+                imageRaw.paste(seasonIcon, [tempX, tempY])
+                fontX,fontY = 声明_智谋.getsize(seasonName)
+                draw.text([get_mid_height(tempX,tempX+200,fontX), tempY-25], seasonName,
+                        font=声明_智谋, fill=fontColor, direction=None)
+                tempX += 240
+            tempY += 160
+
+        tempX = 80
+        for typeName in basicData:
+            tempY = 570
+            iconColor = basicDataNameToImgColor[typeName]
+            bannerPath = os.path.join(
+                destiny2DirPath, f'{basicDataNameToImgName[typeName]}.png')
+            banner = Image.open(bannerPath).resize((29, 84), Image.ANTIALIAS)
+            icon = Image.new('RGB', [140, 10], iconColor)
+            banner = Image.composite(banner, Image.new(
+                'RGB', banner.size, '#303030'), banner)
+            value = basicData[typeName]
+
+            imageRaw.paste(banner, [tempX-35, tempY-40])
+            imageRaw.paste(icon, [tempX, tempY])
+            fontX,fontY = 奖牌数_智谋.getsize(value)
+            xLocation = get_mid_height(tempX,tempX+140,fontX)
+            draw.text([xLocation, tempY-50], value,
+                    font=奖牌数_智谋, fill='white', direction=None)
+
+            x, y = 声明_智谋.getsize(typeName)
+            xLocation = get_mid_height(tempX,tempX+140,x)
+            draw.text([xLocation, tempY+15], typeName,
+                    font=声明_智谋, fill='white', direction=None)
+
+            tempX += 190
+
+        graphX = 900
+        graphY = 400
+
+        usedGraphY = graphY-40
+        tempX = 50
+        tempY = 750
+
+        bottomY = tempY+graphY
+        max: float = activitiesTime['max']
+        # min:float = activitiesTime['min']
+        min: float = 0.0
+        timeY = max-min
+        activities = activitiesTime['response']
+        activitiesLength = len(activities)
+        try:
+            singleX = int(graphX/activitiesLength/2)
+        except:
+            singleX = 0
+
+        try:
+            avghour = int(activitiesTime['total'] / activitiesLength*10)/10
+        except:
+            avghour = 0.0
+        draw.text([tempX, tempY-80], f'玩家最近{activitiesLength}天活跃时长柱形图',
+                font=玩家名字_智谋, fill='white', direction=None)
+        draw.text([tempX, tempY-40], f'日均活跃: {avghour}h',
+                font=声明_智谋, fill='white', direction=None)
+        draw.line((tempX, tempY, tempX, bottomY+3), fill='white', width=3)
+        draw.line((tempX, bottomY+3, tempX+graphX,
+                bottomY+3), fill='white', width=3)
+
+        halfTime = int(timeY*10/2)/10
+        fontx, fonty = 声明_智谋.getsize(f'{halfTime}h')
+        draw.text([50-fontx-4, int(bottomY-usedGraphY/2)], f'{halfTime}h',
+                font=声明_智谋, fill='#9CDDFD', direction=None)
+
+        fontx, fonty = 声明_智谋.getsize(f'{max}h')
+        draw.text([50-fontx-4, bottomY-usedGraphY], f'{max}h',
+                font=声明_智谋, fill='#9CDDFD', direction=None)
+
+        dateList = list(activities.keys())
+        startDate = dateList[0].replace('2021-', '')
+        endDate = dateList[-1].replace('2021-', '')
+
+        draw.text([tempX, bottomY+10], f'{startDate}',
+                font=声明_智谋, fill='#9CDDFD', direction=None)
+        draw.text([tempX+graphX-singleX*2, bottomY+10], f'{endDate}',
+                font=声明_智谋, fill='#9CDDFD', direction=None)
+
+        for dateStr in activities:
+            hour = activities[dateStr]
+            try:
+                y = int(hour/timeY*usedGraphY)
+            except:
+                y = 0
+            y = y if y else 4
+            img = Image.new('RGB', [singleX, y], '#9C9DFD')
+            tempX += singleX
+            imageRaw.paste(img, [tempX, bottomY-y])
+            tempX += singleX
+
+        tempY = 1230
+        for characterName, timeDict in characterTimeDict.items():
+            tempX = 50
+            totalHour = timeDict["总计"]
+            iconPath = os.path.join(destiny2DirPath, f'{characterName}.png')
+            # .resize((29, 84), Image.ANTIALIAS)
+            icon = Image.open(iconPath).convert('RGBA')
+            icon = Image.composite(icon, Image.new(
+                'RGB', icon.size, '#303030'), icon)
+            imageRaw.paste(icon, [tempX, tempY])
+
+            yLocation = get_mid_height(tempY, tempY+80, 31)
+            draw.text([tempX+85, yLocation], f'{characterName}',
+                    font=玩家名字_智谋, fill='white', direction=None)
+            draw.text([tempX+85+70, yLocation+10], f'总计: {totalHour}h',
+                    font=声明_智谋, fill='white', direction=None)
+            tempY += 110
+            for modeName, hour in timeDict.items():
+                if modeName == '总计':
+                    continue
+                modeColor = modeColorDict[modeName]
+                xlength = int(hour/totalHour*900)
+                img = Image.new('RGB', [xlength, 10], modeColor)
+                imageRaw.paste(img, [tempX, tempY])
+                fontx, fonty = 声明_智谋.getsize(modeName)
+                if fontx > xlength:
+                    xLocation = tempX
+                else:
+                    xLocation = get_mid_height(tempX, tempX+xlength, fontx)
+                draw.text([xLocation, tempY-30], modeName,
+                        font=声明_智谋, fill='white', direction=None)
+
+                # percentageStr = int(hour/totalHour*1000)/10
+                # percentageStr = f'{percentageStr}%'
+                percentageStr = f'{hour}h'
+                fontx, fonty = 声明_智谋.getsize(percentageStr)
+                if fontx > xlength:
+                    xLocation = tempX
+                else:
+                    xLocation = get_mid_height(tempX, tempX+xlength, fontx)
+                draw.text([xLocation, tempY+17], percentageStr,
+                        font=声明_智谋, fill='white', direction=None)
+
+                tempX += xlength
+            tempY += 80
+
+    
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'生涯_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+        
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)

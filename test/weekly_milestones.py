@@ -150,11 +150,15 @@ def check_milestions_completion(characterMilestones: dict,
     for milestoneActivity in characterActivities:
         if milestoneActivity['activityHash'] in 帝国猎杀大师ActivityHashIdList:
             completion = True
-            for challenge in milestoneActivity['challenges']:
-                challenge = challenge['objective']
-                if challenge['objectiveHash'] == 1980717736:
-                    completion = False
-                    break
+            if 'challenges' not in milestoneActivity:
+                completion = True
+            else:
+                for challenge in milestoneActivity['challenges']:
+                    challenge = challenge['objective']
+                    if challenge['objectiveHash'] == 1980717736:
+                        completion = False
+                        break
+
             milestonesDictToReturn['巅峰周常']['temp1']['completion'] = completion
 
         if milestoneActivity['activityHash'] in 异端深渊ActivityHashIdList:

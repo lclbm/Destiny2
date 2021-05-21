@@ -16,6 +16,7 @@ import json
 
 one = 2287326985
 two = 2933986918
+three = 3555747646
 messageGroup = 827529117
 
 # one = 1281357456
@@ -263,6 +264,7 @@ async def chaxun(session: CommandSession):
 @on_notice('notify.poke')
 async def group_poke_me(session: NoticeSession):
     ev = session.event
+    print(ev)
     try:
         if ev.target_id == ev.self_id:
             msg = f'[CQ:poke,qq={ev.user_id}]'
@@ -278,7 +280,7 @@ async def shouquan(session: CommandSession):
         if ev.self_id == one:
             return None
         if session.current_arg:
-            if (res := re.match(r'(\d+) (\d+) ([0123])', session.current_arg)):
+            if (res := re.match(r'(\d+) (\d+) ([01234])', session.current_arg)):
                 group_id = str(res.group(1))
                 days = int(res.group(2))
                 groupType = int(res.group(3))
@@ -312,10 +314,10 @@ async def shouquan(session: CommandSession):
                     del group_list[int(group_id)]
 
             else:
-                raise Exception('添加授权 <群号> <天数> [类型]\n[类型]: 0无 1原 2半 3')
+                raise Exception('添加授权 <群号> <天数> [类型]\n[类型]: 0无 1原 2半 3略 4测')
 
         else:
-            raise Exception('添加授权 <群号> <天数> [类型]\n[类型]: 0无 1原 2半 3')
+            raise Exception('添加授权 <群号> <天数> [类型]\n[类型]: 0无 1原 2半 3略 4测')
 
     except Exception as e:
         await session.send(f'\n{e}', at_sender=True)
