@@ -26,6 +26,11 @@ from query import *
 from weekly_milestones import weekly_milestones, check_milestions_completion
 import sqlite3
 
+one = 2287326985
+two = 2933986918
+three = 3555747646
+
+
 class DBase:
 
     def __init__(self, db_file):
@@ -5153,7 +5158,6 @@ async def Check_dianfeng_aync2(session):
                         font=奖牌名_智谋, fill='white', direction=None)
 
         
-        
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'weekly_{name}.png')
@@ -5169,7 +5173,8 @@ async def Check_dianfeng_aync2(session):
 async def Check_shengya_aync2(session: CommandSession):
     try:
         ev = session.event
-            
+        if ev.self_id == two:
+            return None
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink

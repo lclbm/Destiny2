@@ -200,7 +200,7 @@ async def quit_group(session: CommandSession):
         except:
             pass
     else:
-        msg = '格式错误'
+        msg = '格式错误，退群 [123] <\d+>'
 
     await session.send(msg, at_sender=True)
 
@@ -294,6 +294,7 @@ async def del_shouquan(session: CommandSession):
                 if group_id in 购买记录:
                     del 购买记录[group_id]
                     购买记录write_json()
+                    await session.send(f'删除成功', at_sender=True)
                 else:
                     raise Exception('需要删除授权的群号不在授权记录内')
 
@@ -410,7 +411,7 @@ async def cxsq(session: CommandSession):
             else:
                 raise Exception('格式错误')
         else:
-            group_id = str(ev.group_id)
+            group_id = ev.group_id
 
         print(group_id)
         if group_id == messageGroup:
