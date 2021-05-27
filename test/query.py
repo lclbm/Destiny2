@@ -9,6 +9,24 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
+
+def read_json(file):
+    dict_temp = {}
+    try:
+        with open(file, 'r', encoding='utf-8') as f:
+            dict_temp = json.load(f)
+            return dict_temp
+    except:
+        return dict_temp
+
+def write_json(dict_temp, path):
+    with open(path, 'w', encoding='utf-8') as f:
+        # 设置不转换成ascii  json字符串首缩进
+        f.write(json.dumps(dict_temp, ensure_ascii=False, indent=2))
+
+
+
+
 def num2str(num: int) -> str:
     return "{:,}".format(num)
 
@@ -60,11 +78,11 @@ async def get_activitiesModeTime_dict(membershipType, membershipId, characterId)
                 'total': 0}
     page = 0
     while 1:
-        res = await destiny.api.get_activity_history(membershipType, membershipId, characterId, count=250, mode=None, page=page)
+        res = await destiny.api.get_activity_history(membershipType, membershipId, characterId, count=250, mode=None,page=page)
         try:
             res = res['Response']['activities']
         except:
-            continue
+            res = []
         #熔炉 剧情
         for activity in res:
             modes = activity['activityDetails']['modes']

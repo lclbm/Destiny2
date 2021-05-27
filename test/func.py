@@ -17,10 +17,11 @@ import time
 import numpy as np
 
 
+
 sys.path.append(os.path.join(os.getcwd(),'hoshino','modules','test'))
 from data.tie import gethardlink
 from daily.report import getdailyreport
-from data.checklist import penguinSouvenirs, egg, 增幅s, bones, cats, 称号, exos, 暗熵碎片s, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索,征服者
+from data.checklist import penguinSouvenirs, egg, 增幅s, bones, cats, 称号, exos, 暗熵碎片s, 证章, 赛季挑战, 前兆, DSC, 巅峰, 宗师, 机灵, 玉兔, 赛季, 线索,征服者,珍珠s
 from query import *
 from weekly_milestones import weekly_milestones, check_milestions_completion
 import sqlite3
@@ -114,18 +115,12 @@ sv = hoshino.Service('命运2')
 
 @sv.on_fullmatch('日报')
 async def daily(bot, ev, only_to_me=False):
-    try:
-        filename = await getdailyreport()
-        if filename != False:
-            png_file = os.path.join(
-                os.getcwd(), 'res', 'destiny2', 'img', filename)
-            cqcode = f'[CQ:image,file=file:///{png_file}]'
-            await bot.send(ev, cqcode)
-        else:
-            await bot.send(ev, '日报已更新完毕，可以再次获取啦！', at_sender=True)
-    except Exception as e:
-        print(e)
-        await bot.send(ev, 'Bungie正在进行维护，服务器连接失败，日报更新可能需要延后')
+    filename = await getdailyreport()
+    if filename != False:
+        png_file = os.path.join(
+            os.getcwd(), 'res', 'destiny2', 'img', filename)
+        cqcode = f'[CQ:image,file=file:///{png_file}]'
+        await bot.send(ev, cqcode)
 
 
 # @sv.on_fullmatch(('收费'))
@@ -1624,8 +1619,8 @@ async def Check_shengya_aync(session: CommandSession):
 黑色 = '#000000'
 灰色 = '#818181'
 黑体 = ImageFont.truetype('simhei.ttf', size=20)
-活动标题 = ImageFont.truetype('font1559.ttf', size=30)
-标题2 = ImageFont.truetype('font1559.ttf', size=24)
+活动标题 = ImageFont.truetype('simhei.ttf', size=30)
+标题2 = ImageFont.truetype('simhei.ttf', size=24)
 绿块 = Image.new('RGB', [40, 100], '#00b034')
 红块 = Image.new('RGB', [40, 100], (229, 115, 125))
 
@@ -2058,7 +2053,12 @@ async def Elo(session):
         await session.send(f'{e}', at_sender=True)
 
 
-RAID_LIST = ['深岩墓室', '救赎花园', '最后一愿', '忧愁王冠', '往日之苦', '星之塔：巅峰',
+#3711931140
+#3881495763 
+#1485585878
+
+
+RAID_LIST = ['玻璃拱顶','深岩墓室', '救赎花园', '最后一愿', '忧愁王冠', '往日之苦', '星之塔：巅峰',
              '利维坦：巅峰', '世界吞噬者：巅峰', '星之塔：普通', '世界吞噬者：普通', '利维坦：普通']
 FLAWLESS_DICT = {
     6: 'Flawless',
@@ -2077,14 +2077,17 @@ TAG_COLOR_DICT = {
     'Flawless Trio': '#FA576F',
     'Flawless Duo': '#FA576F',
     'Solo Flawless': '#FA576F',
-    'Trio': '#f4b757',
-    'Duo': '#f4b757',
+    'Trio': '#ea68a2',
+    'Duo': '#ea68a2',
     'Solo': '#00709e',
-
+    'Day One':'#80009C',
+    'Day One Challenge':'#7964FF'
 }
 
 
 RAID_NAEM_DICT = {
+    '玻璃拱顶':'玻璃拱顶',
+    '玻璃拱顶：挑战模式':'玻璃拱顶',
     '深岩墓室': '深岩墓室',
     '最后一愿: 等级55': '最后一愿',
     '最后一愿: 普通': '最后一愿',
@@ -2164,6 +2167,7 @@ async def add_raid_data_dict(all_raid_data_dict: dict, single_raid_data_dict: di
 突袭_奇数背景 = Image.new('RGB', [700, 120], '#292929')
 突袭_偶数背景 = Image.new('RGB', [700, 120], '#1F1F1F')
 
+玻璃拱顶_ = Image.open(f'玻璃拱顶.png')
 深岩墓室_ = Image.open(f'深岩墓室.png')
 救赎花园_ = Image.open(f'救赎花园.png')
 最后一愿_ = Image.open(f'最后一愿.png')
@@ -2179,6 +2183,7 @@ raid双榜图_ = Image.open(f'raid双榜图 (自定义).png')
 
 
 RAID_IMAGE = {
+    '玻璃拱顶':玻璃拱顶_,
     '深岩墓室': 深岩墓室_,
     '救赎花园': 救赎花园_,
     '最后一愿': 最后一愿_,
@@ -2219,6 +2224,12 @@ RAID_FLAWLESS_DICT = {
     '往日之苦': '2925485370',
 }
 
+RAID_DAYONE_DICT = {
+    '玻璃拱顶':'2384429092',
+    '忧愁王冠':'3292013044',
+    '深岩墓室':'2699580344'
+}
+
 
 def get_time_text(secondes):
     if secondes > 0:
@@ -2231,6 +2242,67 @@ def get_time_text(secondes):
         return time
     else:
         return '无'
+
+def get_record_state_completion(state):
+    RecordRedeemed = (state & 1) > 0
+    ObjectiveNotCompleted = (state & 4) > 0
+    if RecordRedeemed:
+        return True
+    if not ObjectiveNotCompleted:
+        return True
+    return False
+
+
+vogNormalRaidWorldFirstDict = read_json('vogNormalRaidWorldFirstDict.json')
+vogChallengeRaidWorldFirstDict = read_json('vogChallengeRaidWorldFirstDict.json')
+
+def get_vogNormalRaid_worldFirst_from_dict(membershipId:str):
+    if not isinstance(membershipId,str):
+        membershipId = str(membershipId)
+    if membershipId in vogNormalRaidWorldFirstDict:
+        return vogNormalRaidWorldFirstDict[membershipId]
+    else:
+        return False
+
+def get_vogChallengeRaid_worldFirst_from_dict(membershipId:str):
+    if not isinstance(membershipId,str):
+        membershipId = str(membershipId)
+    if membershipId in vogChallengeRaidWorldFirstDict:
+        return vogChallengeRaidWorldFirstDict[membershipId]
+    else:
+        return False
+
+def get_dayOne_tag(tag_list: list, records: dict, raidname: str,membershipId):
+    if raidname not in RAID_DAYONE_DICT:
+        return
+
+    record_id = RAID_DAYONE_DICT[raidname]
+    print(raidname)
+    if raidname == '玻璃拱顶':
+        for value in records['characterRecords']['data'].values():
+            characterRecords = value['records']
+            state = characterRecords[record_id]['state']
+            subCompletion = characterRecords[record_id]['objectives'][0]['complete']
+            recordCompltion = get_record_state_completion(state)
+            if (rank := get_vogChallengeRaid_worldFirst_from_dict(membershipId)):
+                tag_list.append(f'Day One Challenge#{rank}')
+                return
+            else:
+                if (rank := get_vogNormalRaid_worldFirst_from_dict(membershipId)):
+                    tag_list.append(f'Day One#{rank}')
+            return
+        
+    else:
+        state = records['profileRecords']['data']['records'][record_id]['state']
+    
+    RecordRedeemed = (state & 1) > 0
+    ObjectiveNotCompleted = (state & 4) > 0
+    if RecordRedeemed:
+        tag_list.append('Day One')
+        return
+    if not ObjectiveNotCompleted:
+        tag_list.append('Day One')
+        return
 
 
 def get_flawless_tag(tag_list: list, records: dict, raidname: str):
@@ -2263,7 +2335,8 @@ async def get_raid(session):
             args = session.current_arg
         info = await GetInfo(args, [900])
         args = info['profile']['data']['userInfo']['displayName']
-        records = info['profileRecords']['data']['records']
+        profileRecords = info['profileRecords']['data']['records']
+        characterRecords = info['characterRecords']['data']
         membershipid = info['profile']['data']['userInfo']['membershipId']
         url = f'https://b9bv2wd97h.execute-api.us-west-2.amazonaws.com/prod/api/player/{membershipid}'
         async with aiohttp.request("GET", url) as r:
@@ -2349,7 +2422,8 @@ async def get_raid(session):
                     tag_list.append(FLAWLESS_DICT[flawlessActivities])
                 if lowAccountCountActivities:
                     tag_list.append(LOWMAN_DICT[lowAccountCountActivities])
-            get_flawless_tag(tag_list, records, raidname)
+            get_flawless_tag(tag_list, profileRecords, raidname)
+            get_dayOne_tag(tag_list,info,raidname,str(membershipid))
 
             突袭原图片 = RAID_IMAGE[raidname]
             if i % 2 == 0:
@@ -2383,8 +2457,9 @@ async def get_raid(session):
 
             height = 5
             for tag in tag_list:
+                temp = tag.split('#')[0]
                 w, h = _FlawlessDuo.getsize(tag)
-                tag颜色 = TAG_COLOR_DICT[tag]
+                tag颜色 = TAG_COLOR_DICT[temp]
                 底色 = Image.new('RGB', [w + 4, h + 4], tag颜色)
                 img_raid.paste(底色, (250 - w, height + 15 + 120 + 120 * i))
                 draw.text([250 - w+2, height + 15 + 120 + 120 * i+1],
@@ -2400,7 +2475,6 @@ async def get_raid(session):
         await session.send(f'{append}', at_sender=False)
     except Exception as err:
         await session.send(f'{err}', at_sender=True)
-
 
 DUNGEON_NAEM_DICT = {
     '异域任务：前兆: 大师': '前兆: 大师',
@@ -3171,9 +3245,8 @@ medalsNameToImgDict = {
 
 @on_command('PVP', aliases=('pvp', 'Pvp'), only_to_me=False)
 async def Check_pvp_aync(session:CommandSession):
-    if session.event.user_id != 3555747646:
-        return
     try:
+        ev = session.event
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
@@ -3249,7 +3322,7 @@ async def Check_pvp_aync(session:CommandSession):
                             referenceId = weaponData['referenceId']
                             weaponInfo = await destiny.decode_hash(referenceId, 'DestinyInventoryItemDefinition')
                             weaponName:str = weaponInfo['displayProperties']['name']
-                            weaponName.replace('/','')
+                            weaponName = weaponName.replace('/','')
                             weaponIconPath = os.path.join(
                                 weaponIconDirPath, f'{weaponName}.png')
 
@@ -5094,9 +5167,9 @@ async def Check_dianfeng_aync2(session):
 
 @on_command('生涯', aliases=('生涯查询', '角色查询'), only_to_me=False)
 async def Check_shengya_aync2(session: CommandSession):
-    if session.event.user_id != 3555747646:
-        return
     try:
+        ev = session.event
+            
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
@@ -5160,7 +5233,11 @@ async def Check_shengya_aync2(session: CommandSession):
         y = 20+int((96-y)/2)
         draw.text([x, y], msg,
                 font=玩家名字_智谋, fill='white', direction=None)
-        await session.send('开始获取玩家生涯数据，可能需要花费1分钟左右的时间，请耐心等待。',at_sender=True)
+
+                
+        
+        
+        await session.send('开始获取生涯数据，可能需要1分钟的时间，期间请不要发送任何消息。',at_sender=True)
         shengyaData = await get_shengya_data(info['profileRecords'], info['profile'], info['characters']['data'],membershipType,membershipId)
         basicData = shengyaData[0]
         yearsDict = shengyaData[1]
@@ -5188,7 +5265,7 @@ async def Check_shengya_aync2(session: CommandSession):
 
                 imageRaw.paste(seasonIcon, [tempX, tempY])
                 fontX,fontY = 声明_智谋.getsize(seasonName)
-                draw.text([get_mid_height(tempX,tempX+200,fontX), tempY-25], seasonName,
+                draw.text([get_mid_height(tempX,tempX+200,fontX), tempY-30], seasonName,
                         font=声明_智谋, fill=fontColor, direction=None)
                 tempX += 240
             tempY += 160
@@ -5326,7 +5403,12 @@ async def Check_shengya_aync2(session: CommandSession):
                 tempX += xlength
             tempY += 80
 
-    
+        draw.text([50, tempY-20], '由于Bungie数据的问题，部分活动数据会有缺失，小日向对数据进行了缺省处理。',
+                        font=声明_智谋, fill='white', direction=None)
+        draw.text([50, tempY-20+35], '由于上述问题，智谋时长会略微少于正常统计。',
+                        font=声明_智谋, fill='white', direction=None)
+
+
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'生涯_{name}.png')
@@ -5334,5 +5416,141 @@ async def Check_shengya_aync2(session: CommandSession):
         append = f'[CQ:image,file=file:///{path}]'
         await session.send(f'{append}', at_sender=False)
         
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+珍珠sDirPath = os.path.join(destiny2DirPath,'珍珠s')
+@on_command('珍珠', aliases=('玻璃宝库'), only_to_me=False)
+async def Check_珍珠_aync2(session):
+    try:
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,900])
+        args = info['profile']['data']['userInfo']['displayName']
+        records = info['profileRecords']['data']['records']
+        args = args[:12]
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+        珍珠sChecklistDict:list = records['932039090']['objectives']
+        
+        珍珠NotGet = 0
+        for i in 珍珠sChecklistDict:
+            珍珠NotGet += 0 if i['complete'] else 1
+        print(珍珠NotGet)
+
+        
+        imageRaw = Image.new(
+            'RGB', [900, 150+240*珍珠NotGet], '#303030')
+
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+
+
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1,y1=玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_records(records)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2,y2=声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x,y = 声明_智谋.getsize('小日向玻璃拱顶珍珠查询')
+        draw.text([524-x, 116-y], '小日向玻璃拱顶珍珠查询',
+                font=声明_智谋, fill='white', direction=None)
+
+
+        dictLength = len(珍珠s)
+        msg = f'玻璃拱顶珍珠收集: {dictLength-珍珠NotGet}/{dictLength}'
+        draw.text([560, 53-15],msg ,
+                font=玩家名字_智谋, fill='white', direction=None)
+        
+        
+
+        x,y = 玩家名字_智谋.getsize(msg)
+        未收集长度 = int(珍珠NotGet/dictLength*x)
+        已收集长度 = x-未收集长度
+        绿块 = Image.new('RGB', [已收集长度, 10], '#5CFC7B')
+        红块 = Image.new('RGB', [未收集长度, 10], '#FC5C5C')
+        imageRaw.paste(绿块,[560,53+30])
+        imageRaw.paste(红块,[560+已收集长度,53+30])
+
+        单块长度 = 240
+        topY = 150
+        leftX= 100
+
+        珍珠Count = -1
+        奇数块 = Image.new('RGB', [900, 单块长度], '#292929')
+        偶数块 = Image.new('RGB', [900, 单块长度], '#1F1F1F')
+
+        for i in 珍珠sChecklistDict:
+            珍珠Count+=1
+            if i['complete']:
+                continue
+            珍珠Location = 珍珠s[珍珠Count]
+            珍珠Name = 珍珠Count
+            x,y = 声明_智谋.getsize('破碎王座')
+            x1,y1 = 玩家名字_智谋.getsize('破碎王座')
+            if 珍珠Count % 2 == 0:
+                imageRaw.paste(偶数块,[0,topY])
+                backgroundColor = '#1F1F1F'
+            else:
+                imageRaw.paste(奇数块,[0,topY])
+                backgroundColor = '#292929'
+
+            TagName = '珍珠'
+            
+
+            珍珠TagIconPath = os.path.join(destiny2DirPath,f'{TagName}.png')
+            珍珠TagIcon = Image.open(珍珠TagIconPath).convert('RGBA')
+            珍珠TagIcon = Image.composite(珍珠TagIcon,
+                Image.new('RGB', 珍珠TagIcon.size, backgroundColor),
+                珍珠TagIcon)
+
+            imageRaw.paste(珍珠TagIcon,[20,topY+20+100-84//2])
+
+            珍珠IconPath = os.path.join(珍珠sDirPath,f'{珍珠Name}.png')
+            if os.path.exists(珍珠IconPath):
+                珍珠Icon = Image.open(珍珠IconPath).resize([400,200])
+            else:
+                珍珠Icon =Image.new('RGB', [400, 200], '#282C34')
+            
+            imageRaw.paste(珍珠Icon,[leftX+350,topY+20])
+            draw.text([leftX+10, topY+20+100-y1//2],珍珠Location ,
+                font=玩家名字_智谋, fill='white', direction=None)
+                
+
+            topY+=单块长度
+        
+
+
+
+
+
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'珍珠_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
     except Exception as e:
         await session.send(f'获取失败，{e}', at_sender=True)

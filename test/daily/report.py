@@ -79,6 +79,6 @@ async def getdailyreport():
         await update()
         if not os.path.exists(img_file):
             raise Exception('日报获取失败，日报服务器的日报url已过期')
-        return 0
+        return file_name
     else:
         return file_name
