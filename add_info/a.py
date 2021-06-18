@@ -36,7 +36,6 @@ def write_json(dict_temp, path):
 
 authorizedUserListPath = os.path.join(root, '词库授权.json')
 authorizedUserList = read_json(authorizedUserListPath)
-print(authorizedUserList)
 
 def addAuthorizedUser(userId):
     if 'useAuthorized' not in authorizedUserList:
@@ -94,7 +93,7 @@ def add_reply(msg):
     raw_message = raw_message.replace('\r', r'\r')
     raw_message = raw_message.replace('\n', r'\n')
     res = re.match(
-        r'添加(个人|群组).*[\(（【/](.+)[\)）】/].*[\(（【/](.+)[\)）】/].*', raw_message)
+        r'添加(个人|群组) +[\(（【/](.+)[\)）】/] *[\(（【/](.+)[\)）】/].*', raw_message)
     if not res:
         raise Exception('格式错误，请输入词库帮助以查看相关教程')
     # 0是个人词库 1是群组词库
@@ -140,7 +139,7 @@ def add_all(msg):
     raw_message = msg['raw_message']
     message = msg['message']
     user_id = msg['user_id']
-    if user_id != 614867321:
+    if user_id not in [614867321,2181656404]:
         raise Exception('需要小日向的管理权限才可以修改全局词库')
     raw_message = raw_message.replace('\r', r'\r')
     raw_message = raw_message.replace('\n', r'\n')
@@ -364,7 +363,7 @@ def del_reply(msg):
 def del_all(msg):
     checkmsg = msg['raw_message']
     user_id = msg['user_id']
-    if user_id != 614867321:
+    if user_id not in [614867321,2181656404]:
         raise Exception('需要小日向的管理权限才可以修改全局词库')
     path = os.path.join(root, 'All.json')
     res = re.match(r'删除全局.*[/【（(](.+)[/】）)].*', checkmsg)
@@ -393,7 +392,7 @@ def del_all(msg):
 def tie_all(msg):
     raw_message = msg['raw_message']
     user_id = msg['user_id']
-    if user_id != 614867321:
+    if user_id not in [614867321,2181656404]:
         raise Exception('需要小日向的管理权限才可以修改全局绑定')
     res = re.match(
         r'绑定全局.*[\(（【/](.+)[\)）】/].*[\(（【/](7656\d{13})[\)）】/].*', raw_message)
@@ -453,7 +452,7 @@ def tie_user(msg):
     else:
         dict_temp[question] = {'type': '绑定' , 'msg': answer}
         write_json(dict_temp, file)
-        return (f'🎉个人绑定成功，{question}已被指定\n输入👉智谋 {question}👈试试吧\n❗该绑定仅对你有效')
+        return (f'🎉个人绑定成功，{question}已被指定\n输入👉智谋 {question}👈试试吧')
         
 def tie_urself(msg):
     raw_message = msg['raw_message']

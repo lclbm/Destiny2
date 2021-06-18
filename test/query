@@ -21,25 +21,13 @@ emblemSmallDirPath = os.path.join(destiny2DirPath, '名片small')
 pgcrDirPath = os.path.join(destiny2DirPath, 'pcgrImage')
 metricIconDirPath = os.path.join(destiny2DirPath, 'metricIcon')
 recordSealsIconDirPath = os.path.join(destiny2DirPath, 'recordSeals')
-collectibleIconsDirPath = os.path.join(destiny2DirPath, 'collectibleIcons')
-collectiblehighResIconsDirPath = os.path.join(destiny2DirPath, 'collectiblehighResIcons')
-screenshotsDirPath = os.path.join(destiny2DirPath, 'screenshotsDirPath')
 
 
 blue = '#03A9F4'
 red = '#E8786E'
 
-
-奖牌名_智谋 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=16)
-奖牌数_智谋 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=40)
-玩家名字_智谋 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=28)
-声明_智谋 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=18)
 font_24 = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=24)
 
-
-皮肤Icon = Image.open(os.path.join(destiny2DirPath,'皮肤.png')).convert('RGBA').resize([36,36])
-皮肤Icon = Image.composite(皮肤Icon, Image.new(
-                'RGB', 皮肤Icon.size, '#303030'), 皮肤Icon)
 
 
 def get_activity_time(period):
@@ -70,12 +58,6 @@ def get_emblem_acquired(emblemHash, collectibles):
     state = collectibles[str(emblemHash)]['state']
     return not get_bitmask(state, 1)
 
-def get_collectible_acquired(collectibleHash, profileCollectibles,characterCollectibles):
-    try:
-        state = profileCollectibles[str(collectibleHash)]['state']
-    except:
-        state = characterCollectibles[str(collectibleHash)]['state']
-    return not get_bitmask(state, 1)
 
 def get_formatSize(size: int) -> str:
     try:
@@ -501,8 +483,6 @@ async def get_partyMemberInfo(partyMembers: dict, currentActivityHash: int):
 
 
 sealsList = read_json(os.path.join(recordSealsIconDirPath,'sealsList.json'))
-weaponSkinsDict = read_json(os.path.join(destiny2DirPath,'weaponSkinsDict.json'))
-print
 def check_seals_completion(records):
     sealsDataToReturn = copy.deepcopy(sealsList)
     for i in range(len(sealsDataToReturn)):
@@ -519,15 +499,3 @@ def check_seals_completion(records):
             value['progress'] = progress
             value['completionValue'] = completionValue
     return sealsDataToReturn
-
-def check_weaponsskins_completion(profileCollectibles,characterCollectibles):
-    weaponsDictToReturn = copy.deepcopy(weaponSkinsDict)
-    for weaponType,weapons in weaponsDictToReturn.items():
-        for weapon in weapons:
-            weaponHash = weapon['hash']
-            weaponname = weapon['name']
-            weaponHighResIcon = weapon['highResIcon']
-            weaponScreenShot = weapon['screenshot']
-            weapon['acquired'] = get_collectible_acquired(weaponHash,profileCollectibles,characterCollectibles)
-
-    return weaponsDictToReturn

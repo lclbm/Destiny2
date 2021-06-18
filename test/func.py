@@ -29,7 +29,9 @@ import sqlite3
 one = 2287326985
 two = 2933986918
 three = 3555747646
+four = 2117336792
 
+destiny2DirPath = os.path.join(os.getcwd(), 'res', 'destiny2')
 
 class DBase:
 
@@ -252,7 +254,9 @@ async def test(session):
 
 
 async def GetInfo(args, components: list) -> dict:
-    components.extend([100])
+    for num in [100,104]:
+        if num not in components:
+            components.append(num)
     print(components)
     global count
     count += 1
@@ -503,11 +507,23 @@ async def GetRaidReport(membershipid):
 #     except Exception as e:
 #         await session.send(f'{e}')
 
-
+pvpSqlitePath = os.path.join(destiny2DirPath,'identifier.sqlite')
+userReplyPath = os.path.join(destiny2DirPath,'reply','user')
 @sv.on_fullmatch(('echo'))
 async def D2_condition(bot, ev):
     text = "{:,}".format(count)
-    msg = f'调用次数：{text}'
+    
+    pvpSqliteSize = os.path.getsize(pvpSqlitePath)
+    pvpSqliteSize = get_formatSize(pvpSqliteSize)
+    userReplyList = os.listdir(userReplyPath)
+
+    jsonCount = 0
+    for fileName in userReplyList:
+        jsonCount += 1 if '.json' in fileName else 0
+    jsonCount=num2str(jsonCount)
+
+
+    msg = f'调用次数：{text}\n个人词库：{jsonCount}\n数据库：{pvpSqliteSize}'
     await bot.send(ev, msg)
 
 
@@ -1644,25 +1660,6 @@ KD标题字体_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf', size=20)
 小字_战绩 = ImageFont.truetype('MYingHeiPRC-W4.ttf', size=16)
 
 
-def get_activity_time(period):
-    UTC_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-    utcTime = datetime.datetime.strptime(period, UTC_FORMAT)
-    localtime = utcTime + datetime.timedelta(hours=8)
-    now = datetime.datetime.now()
-    temp = now - localtime
-    if temp.days >= 365:
-        return str(round(temp.days / 365)) + '年前'
-    elif temp.days >= 30:
-        return str(round(temp.days / 30)) + '月前'
-    elif temp.days >= 7:
-        return str(round(temp.days / 7)) + '周前'
-    elif temp.days >= 1:
-        return str(round(temp.days)) + '天前'
-    elif temp.seconds >= 3600:
-        return str(round(temp.seconds / 3600)) + '小时前'
-    else:
-        return str(round(temp.seconds / 60)) + '分钟前'
-
 
 @ on_command('战绩', aliases=('查询战绩', '战绩查询'), only_to_me=False)
 async def d2_activity(session):
@@ -1869,7 +1866,8 @@ eloModeDict = {"control": "占领",
                "elimination": "灭绝",
                "survival": "生存",
                "clash": "死斗",
-               "rumble": "混战"}
+               "rumble": "混战",
+               "momentum": "趋势"}
 
 
 async def GetEloDict(membershiptype, membershipid):
@@ -2040,9 +2038,9 @@ async def Elo(session):
             WL_L = Image.new('RGB', [L长度, 10], 红色)
             img_elo.paste(WL_W, (800, 150+80*i))
             img_elo.paste(WL_L, (800 + W长度, 150+80*i))
-            draw.text((800, 115+80*i), f'{胜率}%',
+            draw.text((800, 115+80*i), f'{胜率}',
                       font=Elo分, fill='white', direction=None)
-            draw.text((860, 120+80*i), f'({胜利} - {失败})',
+            draw.text((875, 120+80*i), f'({胜利} - {失败})',
                       font=描述文本, fill='#C3C3C3', direction=None)
 
         name = time.time()
@@ -2102,6 +2100,7 @@ RAID_NAEM_DICT = {
     '利维坦: 巅峰': '利维坦：巅峰',
     '利维坦: 普通': '利维坦：普通',
     '利维坦，星之塔: 普通': '星之塔：普通',
+    '利维坦，星之塔': '星之塔：普通',
     '利维坦，星之塔: 巅峰': '星之塔：巅峰',
     '世界吞噬者，利维坦: 巅峰': '世界吞噬者：巅峰',
     '世界吞噬者，利维坦: 普通': '世界吞噬者：普通',
@@ -3181,12 +3180,6 @@ def write_json(dict_temp, path):
 
 
 
-async def dowload_img(url,path):
-    async with aiohttp.ClientSession() as session:
-        response = await session.get(url)
-        content = await response.read()
-    with open(path, 'wb') as f:
-        f.write(content)
 
 标题_pvp = ImageFont.truetype('MYingHeiPRC-W5.ttf', size=18)
 大标题_pvp = ImageFont.truetype('MYingHeiPRC-W7.ttf', size=24)
@@ -3252,6 +3245,10 @@ medalsNameToImgDict = {
 async def Check_pvp_aync(session:CommandSession):
     try:
         ev = session.event
+        # if ev.self_id == three:
+        #     await session.send('3号机生涯和PvP查询暂时禁用1周，请等待后续开放。',at_sender=True)
+
+        #     return None
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
@@ -3268,21 +3265,21 @@ async def Check_pvp_aync(session:CommandSession):
 
         for characterId in characterDict:
             classHash = characterDict[characterId]['classHash']
-            activities = await destiny.api.get_activity_history(membershipTypeNum, membershipId, characterId, 50, 5, 0)
+            activities = await destiny.api.get_activity_history(membershipTypeNum, membershipId, characterId, 20, 5, 0)
             # 这里可能会没有Response
             if activities['ErrorStatus'] != 'Success':
                 Message = activities['Message']
-                raise Exception(f'🤔啊这...战绩查询失败了，可能是玩家设置了数据隐私。\n{Message}')
+                raise Exception(f'🤔啊这...战绩查询失败了。\n{Message}')
             if 'activities' not in activities['Response']:
                 continue
             activitiesList.extend(activities['Response']['activities'])
         activitiesListOrdered = sorted(
             activitiesList, key=lambda x: x['period'], reverse=True)
-        activitiesListToBeUsed = activitiesListOrdered[:50]
+        activitiesListToBeUsed = activitiesListOrdered[:20]
 
         weaponDict = {}
         modeDict = {}
-        await session.send('开始获取最近50场对局详细记录，可能需要耗费较长的时间，请耐心等待。',at_sender=True)
+        await session.send('开始获取最近20场对局详细记录，可能需要一定的时间，请耐心等待。',at_sender=True)
         
         with DBase(sqlitePath) as db:
             for i in activitiesListToBeUsed:
@@ -3296,7 +3293,7 @@ async def Check_pvp_aync(session:CommandSession):
                     db.conn.commit()
                     print('add')
                 if activityDetail['ErrorCode'] != 1:
-                        continue
+                    continue
                 modeInfo = await destiny.decode_hash(activityDetail['Response']['activityDetails']['directorActivityHash'],
                                                     'DestinyActivityDefinition')
                 modeName = modeInfo['originalDisplayProperties']['name']
@@ -3316,7 +3313,7 @@ async def Check_pvp_aync(session:CommandSession):
                         else:
                             modeDict[modeName] = {'k': k, 'd': d, 'time': timeNum}
 
-                        if 'weapons' not in i['extended']:
+                        if 'extended' not in i or 'weapons' not in i['extended']:
                             continue
                         for weaponData in i['extended']['weapons']:
 
@@ -3362,7 +3359,7 @@ async def Check_pvp_aync(session:CommandSession):
         draw = ImageDraw.Draw(imageRaw)
         draw.text((30, 20), f'小日向PVP查询: {args}',
                 font=名字_pvp, fill='white', direction=None)
-        draw.text((30, 100), f'▢ 最近50场熔炉数据',
+        draw.text((30, 100), f'▢ 最近20场熔炉数据',
                 font=大标题_pvp, fill='white', direction=None)
         for i in range(len(WeaponDictOrdered)):
             weaponData = WeaponDictOrdered[i]
@@ -3734,7 +3731,6 @@ async def Check_pvp_aync(session:CommandSession):
 
 
 
-destiny2DirPath = os.path.join(os.getcwd(), 'res', 'destiny2')
 gambitDirPath = os.path.join(destiny2DirPath, '智谋')
 emblemDirPath = os.path.join(destiny2DirPath, '名片')
 
@@ -3883,7 +3879,7 @@ async def Check_gambit_aync(session:CommandSession):
         x1, y1 = 玩家名字_智谋.getsize(args)
         
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                   font=声明_智谋, fill='white', direction=None)
@@ -4075,7 +4071,7 @@ async def Check_bones_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4228,7 +4224,7 @@ async def Check_eggs_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4365,7 +4361,7 @@ async def Check_exo_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4495,7 +4491,7 @@ async def Check_zengfu_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4627,7 +4623,7 @@ async def Check_Penguin_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4756,7 +4752,7 @@ async def Check_suipian_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -4889,7 +4885,7 @@ async def Check_cats_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -5028,7 +5024,7 @@ async def Check_dianfeng_aync2(session):
         x1, y1 = 玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2, y2 = 声明_智谋.getsize('赛季等级')
@@ -5092,7 +5088,7 @@ async def Check_dianfeng_aync2(session):
                 x, y = 玩家名字_智谋.getsize(milestoneName)
                 draw.text([leftX+70, get_mid_height(topY+10, topY+60+10, 31)], milestoneName,
                         font=玩家名字_智谋, fill='white', direction=None)
-
+                
                 milestoneCount += 1
                 topY += 80
         
@@ -5173,8 +5169,9 @@ async def Check_dianfeng_aync2(session):
 async def Check_shengya_aync2(session: CommandSession):
     try:
         ev = session.event
-        if ev.self_id == two:
-            return None
+        # if ev.self_id == three:
+        #     await session.send('3号机生涯和PvP查询暂时禁用1周，请等待后续开放。',at_sender=True)
+        #     return None
         hardlink = gethardlink(session)
         if hardlink:
             args = hardlink
@@ -5221,7 +5218,7 @@ async def Check_shengya_aync2(session: CommandSession):
         x1, y1 = 玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2, y2 = 声明_智谋.getsize('赛季等级')
@@ -5383,6 +5380,8 @@ async def Check_shengya_aync2(session: CommandSession):
                 if modeName == '总计':
                     continue
                 modeColor = modeColorDict[modeName]
+                if totalHour == 0:
+                    continue
                 xlength = int(hour/totalHour*900)
                 img = Image.new('RGB', [xlength, 10], modeColor)
                 imageRaw.paste(img, [tempX, tempY])
@@ -5471,7 +5470,7 @@ async def Check_珍珠_aync2(session):
         x1,y1=玩家名字_智谋.getsize(args)
         上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
 
-        seasonLevel = get_season_level_from_records(records)
+        seasonLevel = get_season_level_from_profile(info)
         draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
                 font=声明_智谋, fill='white', direction=None)
         x2,y2=声明_智谋.getsize('赛季等级')
@@ -5503,6 +5502,7 @@ async def Check_珍珠_aync2(session):
         leftX= 100
 
         珍珠Count = -1
+        drawCount = 0
         奇数块 = Image.new('RGB', [900, 单块长度], '#292929')
         偶数块 = Image.new('RGB', [900, 单块长度], '#1F1F1F')
 
@@ -5514,7 +5514,7 @@ async def Check_珍珠_aync2(session):
             珍珠Name = 珍珠Count
             x,y = 声明_智谋.getsize('破碎王座')
             x1,y1 = 玩家名字_智谋.getsize('破碎王座')
-            if 珍珠Count % 2 == 0:
+            if drawCount % 2 == 0:
                 imageRaw.paste(偶数块,[0,topY])
                 backgroundColor = '#1F1F1F'
             else:
@@ -5522,6 +5522,7 @@ async def Check_珍珠_aync2(session):
                 backgroundColor = '#292929'
 
             TagName = '珍珠'
+            drawCount+=1
             
 
             珍珠TagIconPath = os.path.join(destiny2DirPath,f'{TagName}.png')
@@ -5553,6 +5554,653 @@ async def Check_珍珠_aync2(session):
         name = time.time()
         path = os.path.join(os.getcwd(), 'res', 'destiny2',
                             'cache', f'珍珠_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+
+@on_command('队伍', aliases=('队伍查询', '火力战队', '找内鬼'), only_to_me=False)
+async def getDataFireteam_2(session):
+    try:
+        ev = session.event
+        # if ev.self_id == three:
+        #     return None
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,204,1000])
+        membershipId = info['membershipid']
+        membershipType = info['membershiptype_num']
+        args = info['profile']['data']['userInfo']['displayName']
+        characterActivities = info['characterActivities']['data']
+        args = args[:12]
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+
+        try:
+            profileTransitoryData = info['profileTransitoryData']['data']
+        except:
+            raise Exception('所查询的玩家目前不在线')
+        timeMsg = get_activity_time(profileTransitoryData['currentActivity']['startTime'])
+        
+        currentActivityHash = 0
+        characterIdPlayNow = get_recent_play_characterId(characterActivities)
+        currentActivityHash = characterActivities[characterIdPlayNow]['currentActivityHash']
+        partyMembersData,basicData = await get_partyMemberInfo(profileTransitoryData['partyMembers'],currentActivityHash)
+        
+
+
+
+        IMAGEX = 900
+        IMAGEY = 130+(basicData[3]*260)
+        imageRaw = Image.new(
+            'RGB', [IMAGEX, IMAGEY], '#303030')
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        # 奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        # 偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+
+        # classNameDict = []
+        # for characterId in characterDict:
+        #     classNameDict.append(
+        #         classdict[characterDict[characterId]['classHash']])
+
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1, y1 = 玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_profile(info)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2, y2 = 声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x, y = 声明_智谋.getsize('小日向火力战队查询')
+        draw.text([524-x, 116-y], '小日向火力战队查询',
+                font=声明_智谋, fill='white', direction=None)
+
+        msg = f'{basicData[1]}，{basicData[0]}'
+        x, y = 声明_智谋.getsize(msg)
+        x = get_mid_height(524,IMAGEX,x)
+        y = 40
+        draw.text([x, y], msg,
+                font=声明_智谋, fill='white', direction=None)
+
+
+
+        x, y = 声明_智谋.getsize(timeMsg)
+        x = get_mid_height(524,IMAGEX,x)
+        y = 70
+        draw.text([x, y], timeMsg,
+                font=声明_智谋, fill='white', direction=None)
+
+
+        # tempX = get_mid_height(0,900,474)
+        tempX = 75
+        tempY=150
+        队长块 = Image.new(
+            'RGB', [10, 96], '#00A4EF')
+        队员块 = Image.new(
+            'RGB', [10, 96], '#4CD266')
+        
+        characterCount=0
+        单块长度 = 260
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+
+        for partyMemberData in partyMembersData:
+            name = partyMemberData['name']
+            # name = name[:14]
+            className = partyMemberData['className']
+            level = partyMemberData['level']
+            title = partyMemberData['title']
+            emblem = partyMemberData['emblem']
+            status = partyMemberData['status']
+            
+            if characterCount % 2==0:
+                imageRaw.paste(偶数块, [0, tempY])
+                color = 偶数颜色
+            else:
+                imageRaw.paste(奇数块, [0, tempY])
+                color = 奇数颜色
+
+            tempY+=25
+
+            emblemImg = Image.open(emblem)  # .resize([379,77])
+            imageRaw.paste(emblemImg, [tempX, tempY])
+            imageRaw.paste(队长块 if status == '队长' else 队员块, [tempX-25, tempY])
+
+
+            
+            draw.text([tempX+125, tempY], name,
+                    font=玩家名字_智谋, fill='white', direction=None)
+            上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+            draw.text([tempX+125, get_mid_height(tempY+31,tempY+96-20,20)], f'赛季等级: {level}',
+                    font=声明_智谋, fill='white', direction=None)
+            draw.text([tempX+125, tempY+96-20], f'{className}',
+                    font=声明_智谋, fill='white', direction=None)
+            
+            x,y = 声明_智谋.getsize(title)
+            draw.text([get_mid_height(tempX,tempX+96,x), tempY+105], f'{title}',
+                    font=声明_智谋, fill='#F7B23B', direction=None)
+
+            tempY+=110
+
+
+            for dataShow in partyMemberData['dataList']:
+                Name = dataShow['name']
+                Icon = dataShow['icon']
+                Progress = dataShow['progress']
+                
+                x,y = 声明_智谋.getsize(Name)
+                draw.text([tempX+125+45, tempY+70], f'{Name}',
+                    font=声明_智谋, fill='white', direction=None)
+
+                色块 = Image.new('RGB', [x, 10], '#EB4A42')
+                imageRaw.paste(色块, [tempX+125+45, tempY+53])
+                numx,numy=奖牌数_智谋.getsize(Progress)
+                draw.text([get_mid_height(tempX+125+45,tempX+125+45+x,numx), tempY], f'{Progress}',
+                    font=奖牌数_智谋, fill='white', direction=None)
+                
+
+
+                emblemImg = Image.open(Icon).resize([29,84]).convert('RGBA')
+                emblemImg = Image.composite(emblemImg, Image.new(
+                'RGB', emblemImg.size, color), emblemImg)
+                imageRaw.paste(emblemImg, [tempX+125, get_mid_height(tempY,tempY+90,84)])
+                
+            
+            tempY+=110
+            characterCount+=1
+
+
+
+
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'fireteam_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+
+@on_command('名片', aliases=('名片查询', 'mpcx'), only_to_me=False)
+async def checkemblem(session):
+    try:
+        ev = session.event
+        # if ev.self_id != four:
+        #     return None
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,800])
+        membershipId = info['membershipid']
+        membershipType = info['membershiptype_num']
+        args = info['profile']['data']['userInfo']['displayName']
+        args = args[:12]
+        
+        res = await destiny.decode_hash(1166184619,'DestinyPresentationNodeDefinition')
+        emblemsAllCount = len(res['children']['collectibles'])
+        collectibles = info['profileCollectibles']['data']['collectibles']
+        emblemToDrawList = []
+        for emblemInfoRaw in res['children']['collectibles']:
+            emblemHash = emblemInfoRaw['collectibleHash']
+            if (acquired := get_emblem_acquired(emblemHash,collectibles)):
+                emblemInfo = await destiny.decode_hash(emblemHash,'DestinyCollectibleDefinition')
+                name = emblemInfo['displayProperties']['name']
+                icon = 'https://www.bungie.net' + emblemInfo['displayProperties']['icon']
+                iconPath = os.path.join(iconSmallDirPath,f'{emblemHash}.png')
+                await dowload_img(icon,iconPath)
+                itemHash = emblemInfo['itemHash']
+                itemInfo = await destiny.decode_hash(itemHash,'DestinyInventoryItemDefinition')
+                secondaryIcon = 'https://www.bungie.net' +itemInfo['secondaryIcon']
+                secondaryIconPath = os.path.join(emblemDirPath,f'{itemHash}.png')
+                await dowload_img(secondaryIcon,secondaryIconPath)
+                emblemToDrawList.append(
+                    {
+                        'name':name,
+                        'icon':iconPath,
+                        'secondaryIcon':secondaryIconPath
+                    }
+                )
+
+
+        emblemCount = len(emblemToDrawList)
+        IMAGEX = 900
+        IMAGEY = 160+int(emblemCount/2+0.5)*120
+        imageRaw = Image.new(
+                'RGB', [IMAGEX, IMAGEY], '#303030')
+
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+        
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1,y1=玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_profile(info)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2,y2=声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x,y = 声明_智谋.getsize('小日向综合名片查询')
+        draw.text([524-x, 116-y], '小日向综合名片查询',
+                font=声明_智谋, fill='white', direction=None)
+
+
+
+        msg = f'综合名片查询: {emblemCount}/{emblemsAllCount}'
+        x, y = 玩家名字_智谋.getsize(msg)
+        x = 524+int((IMAGEX-524-x)/2)
+        y = 20+int((96-y)/2)
+        draw.text([x, y-10], msg,
+                font=玩家名字_智谋, fill='white', direction=None)
+        
+        fontX,fontY = 玩家名字_智谋.getsize(msg)
+        已收集长度 = int(emblemCount/emblemsAllCount*fontX)
+        未收集长度 = fontX-已收集长度
+        绿块 = Image.new('RGB', [已收集长度, 10], '#5CFC7B')
+        红块 = Image.new('RGB', [未收集长度, 10], '#FC5C5C')
+        imageRaw.paste(绿块,[x,53+40])
+        imageRaw.paste(红块,[x+已收集长度,53+40])
+
+        单块长度 = 120
+        times = 0.6
+        lineCount = 0
+        emblemSingleX,emblemSingleY = int(474*times),int(96*times)
+        tempY = 160-单块长度
+
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+
+
+        for i in range(emblemCount):
+            if i % 2 == 0:
+                tempX = 50
+                tempY+=单块长度
+                if lineCount%2==0:
+                    imageRaw.paste(偶数块, [0, tempY])
+                    backgroundColor = 偶数颜色
+                else:
+                    imageRaw.paste(奇数块, [0, tempY])
+                    backgroundColor = 奇数颜色
+
+                lineCount+=1
+
+            embleData = emblemToDrawList[i]
+            name = embleData['name']
+            iconPath = embleData['icon']
+            secondaryIconPath = embleData['secondaryIcon']
+            
+            makrX = tempX
+            icon = Image.open(iconPath).resize([emblemSingleY, emblemSingleY])
+            secondaryIcon = Image.open(secondaryIconPath).resize([emblemSingleX, emblemSingleY])
+            imageRaw.paste(icon,[tempX,get_mid_height(tempY,tempY+单块长度,emblemSingleY)-5])
+            tempX += emblemSingleY + 10
+            
+            
+            imageRaw.paste(secondaryIcon,[tempX,get_mid_height(tempY,tempY+单块长度,emblemSingleY)-5])
+            fontX,fontY = 奖牌名_智谋.getsize(name)
+            draw.text([get_mid_height(makrX,tempX+emblemSingleX, fontX), 
+            tempY+单块长度-30], 
+            name,
+                            font=奖牌名_智谋, 
+                            fill='white', 
+                            direction=None)
+            
+            tempX += emblemSingleX + 100
+
+            
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'emblem_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+@on_command('称号', aliases=('称号查询', 'chcx'), only_to_me=False)
+async def checkchenghao(session):
+    try:
+        ev = session.event
+        # if ev.self_id != four:
+        #     return None
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,900])
+        membershipId = info['membershipid']
+        membershipType = info['membershiptype_num']
+        args = info['profile']['data']['userInfo']['displayName']
+        args = args[:12]
+        records = info['profileRecords']['data']['records']
+        
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+        sealsData = check_seals_completion(records)
+
+
+        单块长度 = 140
+        IMAGEX = 1070
+        IMAGEY = 160+11*单块长度+50
+        imageRaw = Image.new(
+                'RGB', [IMAGEX, IMAGEY], '#303030')
+
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+        
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1,y1=玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_profile(info)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2,y2=声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x,y = 声明_智谋.getsize('小日向称号印章查询')
+        draw.text([524-x, 116-y], '小日向称号印章查询',
+                font=声明_智谋, fill='white', direction=None)
+
+
+
+        msg = f'小日向现有称号/传承印章查询'
+        x, y = 玩家名字_智谋.getsize(msg)
+        x = 524+int((IMAGEX-524-x)/2)
+        y = 30+int((96-y)/2)
+        draw.text([x, y-10], msg,
+                font=玩家名字_智谋, fill='white', direction=None)
+
+        
+        sealSingleX,sealSingleY = 100,100
+        tempX = 50
+        tempY = 160-单块长度
+        gap = (单块长度-sealSingleX)//2
+
+
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+
+        for i in range(len(sealsData)):
+            sl = sealsData[i]
+            sealsCount = 0
+            for value in sl.values():
+                sealsCount+=1
+                if sealsCount % 3 == 1:
+                    tempX=50
+                    tempY+=单块长度
+                    if (sealsCount // 3) % 2 == 0:
+                        imageRaw.paste(偶数块,[0,tempY])
+                        backGroundColor = 偶数颜色
+                    else:
+                        imageRaw.paste(奇数块,[0,tempY])
+                        backGroundColor = 奇数颜色
+
+
+                icon = value['icon']
+                name = value['name']
+                progress = value['progress']
+                completionValue = value['completionValue']
+                if progress>completionValue:
+                    completionValue = progress
+
+                
+                sealIcon=Image.open(icon).resize([sealSingleX, sealSingleY]).convert('RGBA')
+                sealIcon = Image.composite(sealIcon, Image.new(
+                    'RGB', sealIcon.size, backGroundColor), sealIcon)
+
+                imageRaw.paste(sealIcon,[tempX,tempY+gap])
+                completionLen = int(progress/completionValue*sealSingleY)
+                unCompletionLen = sealSingleY-completionLen
+                completionSquare = Image.new('RGB', [10, completionLen], blue)
+                unCompletionSquare = Image.new('RGB', [10, unCompletionLen], red)
+                imageRaw.paste(unCompletionSquare,[tempX+sealSingleX+20,tempY+gap])
+                imageRaw.paste(completionSquare,[tempX+sealSingleX+20,tempY+gap+unCompletionLen])
+                
+                fontX,fontY = 玩家名字_智谋.getsize(name)
+                xLocation = tempX+sealSingleX+20+10+20
+                yLocation = tempY+gap+10
+                draw.text([xLocation, yLocation], name,
+                font=玩家名字_智谋, fill='white', direction=None)
+                msg = f'{progress} / {completionValue}'
+                yLocation+=fontY+20
+                draw.text([xLocation, yLocation], msg,
+                font=font_24, fill='white', direction=None)
+
+
+                tempX+=360
+            tempY+=50
+
+    
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'称号_{name}.png')
+        imageRaw.save(path, 'png')
+        append = f'[CQ:image,file=file:///{path}]'
+        await session.send(f'{append}', at_sender=False)
+
+    except Exception as e:
+        await session.send(f'获取失败，{e}', at_sender=True)
+
+
+
+@on_command('异域武器皮肤', aliases=('皮肤'), only_to_me=False)
+async def checkpifu(session):
+    try:
+        ev = session.event
+        # if ev.self_id != four:
+        #     return None
+        hardlink = gethardlink(session)
+        if hardlink:
+            args = hardlink
+        else:
+            args = session.current_arg
+        info = await GetInfo(args, [200,800])
+        membershipId = info['membershipid']
+        membershipType = info['membershiptype_num']
+        args = info['profile']['data']['userInfo']['displayName']
+        args = args[:12]
+        args = info['profile']['data']['userInfo']['displayName']
+        args = args[:12]
+        profileCollectibles = info['profileCollectibles']['data']['collectibles']
+        characterId = list(info['characterCollectibles']['data'])[0]
+        characterCollectibles = info['characterCollectibles']['data'][characterId]['collectibles']
+        
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+        skinsData = check_weaponsskins_completion(profileCollectibles,characterCollectibles)
+
+        间隔块数 = len(skinsData)
+        行数 = 0
+        for value in skinsData.values():
+            weaponLen = len(value)
+            if weaponLen % 5 != 0:
+                行数+=1
+            行数+=weaponLen//5
+        单块长度 = 60
+        间隔块长度 = 50
+        IMAGEX = 1100
+        IMAGEY = 130+行数*单块长度+间隔块长度*间隔块数
+        imageRaw = Image.new(
+                'RGB', [IMAGEX, IMAGEY], '#303030')
+
+
+        emblemFileName = ''
+        characterDict = info['characters']['data']
+
+        for characterId in characterDict:
+            emblemBackgroundPath = characterDict[characterId]['emblemBackgroundPath']
+            emblemHash = characterDict[characterId]['emblemHash']
+            emblemUrl = 'https://www.bungie.net' + emblemBackgroundPath
+            emblemFileName = os.path.join(emblemDirPath, f'{emblemHash}.png')
+            await dowload_img(emblemUrl, emblemFileName)
+            break
+    
+        draw = ImageDraw.Draw(imageRaw)
+        emblemImg = Image.open(emblemFileName)  # .resize([379,77])
+        imageRaw.paste(emblemImg, [50, 20])
+        draw.text([145, 25], args,
+                font=玩家名字_智谋, fill='white', direction=None)
+        x1,y1=玩家名字_智谋.getsize(args)
+        上次在线时间 = get_activity_time(info['profile']['data']['dateLastPlayed'])
+
+        seasonLevel = get_season_level_from_profile(info)
+        draw.text([145, 25+y1+5], f'赛季等级: {seasonLevel}',
+                font=声明_智谋, fill='white', direction=None)
+        x2,y2=声明_智谋.getsize('赛季等级')
+        draw.text([145, 25+y1+y2+5+5], f'上次活动: {上次在线时间}',
+                font=声明_智谋, fill='white', direction=None)
+
+        x,y = 声明_智谋.getsize('小日向异域武器皮肤查询')
+        draw.text([524-x, 116-y], '小日向异域武器皮肤查询',
+                font=声明_智谋, fill='white', direction=None)
+
+
+
+        msg = f'小日向异域武器皮肤查询'
+        x, y = 玩家名字_智谋.getsize(msg)
+        x = 524+int((IMAGEX-524-x)/2)
+        y = 30+int((96-y)/2)
+        draw.text([x, y-10], msg,
+                font=玩家名字_智谋, fill='white', direction=None)
+
+        
+        iconSingleX,iconSingleY = 42,42
+        tempX = 50
+        tempY = 180-间隔块长度
+        gap = (单块长度-iconSingleY)//2
+
+
+        奇数颜色 = '#292929'
+        偶数颜色 = '#1F1F1F'
+        色块宽度= 6
+        奇数块 = Image.new('RGB', [IMAGEX, 单块长度], 奇数颜色)
+        偶数块 = Image.new('RGB', [IMAGEX, 单块长度], 偶数颜色)
+        红块 = Image.new('RGB', [色块宽度, iconSingleY], red)
+        蓝块 = Image.new('RGB', [色块宽度, iconSingleY], blue)
+        
+        
+        for weaponType,weapons in skinsData.items():
+            
+            tempX = 50
+            imageRaw.paste(皮肤Icon,[tempX,get_mid_height(tempY,tempY+间隔块长度,36)])
+            tempX += 44
+            fontX,fontY = font_24.getsize(weaponType)
+            yLocation = get_mid_height(tempY,tempY+间隔块长度,fontY)
+            draw.text([tempX, yLocation], weaponType,
+                font=font_24, fill='white', direction=None)
+            weaponCount = 0
+            tempY+=间隔块长度
+            tempX = 50
+            for weapon in weapons:
+                weaponCount+=1
+                if (weaponCount % 5) == 1:
+                    tempX = 50
+                    tempY+=单块长度 if weaponCount !=1 else 0
+                    if (weaponCount // 5) % 2 == 1:
+                        imageRaw.paste(奇数块,[0,tempY])
+                    else:
+                        imageRaw.paste(偶数块,[0,tempY])
+                    
+
+
+
+
+                weaponHash = weapon['hash']
+                weaponIcon = weapon['icon']
+                weaponname = weapon['name'].replace('_','/')
+                weaponHighResIcon = weapon['highResIcon']
+                weaponScreenShot = weapon['screenshot']
+                weaponAcquired = weapon['acquired']
+                
+                icon = Image.open(weaponIcon).resize([iconSingleX,iconSingleY])
+                if not weaponAcquired:
+                    icon = get_grey_img(icon)
+                imageRaw.paste(icon,[tempX,tempY+gap])
+                tempX+=iconSingleX+10
+                imageRaw.paste(蓝块 if weaponAcquired else 红块,[tempX,tempY+gap])
+                tempX+=色块宽度+10
+                draw.text([tempX, tempY+gap], weaponname,
+                font=声明_智谋, fill='white', direction=None)
+                tempX+=140
+            tempY+=单块长度
+
+
+
+        name = time.time()
+        path = os.path.join(os.getcwd(), 'res', 'destiny2',
+                            'cache', f'皮肤_{name}.png')
         imageRaw.save(path, 'png')
         append = f'[CQ:image,file=file:///{path}]'
         await session.send(f'{append}', at_sender=False)
